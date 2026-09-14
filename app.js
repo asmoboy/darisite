@@ -184,9 +184,15 @@ render();
 // ---------- Plan-Anfrage (Zahlungslink per E-Mail) ----------
 // Die Anfrage wird über FormSubmit (formsubmit.co) an CONTACT_EMAIL geschickt.
 // Gleichzeitig bekommt der Kunde eine automatische Antwort-Mail – mit dem
-// Stripe-Zahlungslink aus config.js, sofern dort einer eingetragen ist.
+// Stripe-Zahlungslink, den die Supabase Edge Function "payment-link" erzeugt.
 async function sendRequest({ name, email, plan, billing, message = "" }) {
-  const link = STRIPE_LINKS[plan]?.[billing.startsWith("Jährlich") ? "yearly" : "monthly"];
+  let link = null;
+  try {
+    const { data, error } = await sb.functions.invoke("payment-link", {
+      body: { plan, billing: billing.startsWith("Jährlich") ? "yearly" : "monthly" },
+    });
+    if (!error && data?.url) link = data.url;
+  } catch {}
   const autoresponse = link
     ? `Hallo ${name},\n\ndanke für deine Anfrage! Hier ist dein Zahlungslink für den Plan „${plan}“ (${billing}):\n\n${link}\n\nÜber den Link bezahlst du sicher im Stripe-Checkout. Direkt danach schalten wir deine Community frei.\n\nViele Grüße\ndein kreisel-Team`
     : `Hallo ${name},\n\ndanke für deine Anfrage für den Plan „${plan}“ (${billing}). Wir schicken dir in Kürze deinen persönlichen Stripe-Zahlungslink per E-Mail.\n\nViele Grüße\ndein kreisel-Team`;

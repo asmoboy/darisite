@@ -6,14 +6,8 @@ const CONTACT_EMAIL = "officekolorao@gmail.com";
 const SUPABASE_URL = "https://cuochwrzrjdsceivawpi.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_jyAa0oz-SMNBkWD9kcZ_vA_jElF-egp";
 
-// Stripe Payment Links pro Plan (aus dem Stripe-Dashboard → Zahlungslinks).
-// Ist ein Link eingetragen, bekommt der Kunde ihn nach der Anfrage automatisch per E-Mail.
-// Bleibt ein Feld leer, bekommt er eine Bestätigung und du schickst den Link selbst.
-const STRIPE_LINKS = {
-  Starter:  { monthly: "", yearly: "" },
-  Pro:      { monthly: "", yearly: "" },
-  Business: { monthly: "", yearly: "" },
-};
+// Stripe-Zahlungslinks erzeugt die Supabase Edge Function "payment-link"
+// (supabase/functions/payment-link). Der geheime Stripe-Key liegt nur dort als Secret.
 
 document.querySelectorAll("[data-mail]").forEach((a) => {
   a.href = `mailto:${CONTACT_EMAIL}`;
