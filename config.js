@@ -1,5 +1,5 @@
 // Zentrale Einstellungen – wird von allen Seiten geladen.
-const CONTACT_EMAIL = "hallo@kreisel.de"; // TODO: eigene Adresse eintragen
+const CONTACT_EMAIL = "officekolorao@gmail.com";
 
 // Supabase (Konten): Dashboard → Project Settings → API.
 // Der "anon public" Key darf öffentlich im Code stehen – die Daten schützt Row Level Security (supabase/schema.sql).
