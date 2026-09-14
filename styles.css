@@ -464,6 +464,15 @@ button { font: inherit; color: inherit; }
 .menu__opt { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; font-size: 14px; cursor: pointer; }
 .menu__opt:hover { background: var(--bg); }
 .menu__opt input { accent-color: var(--accent); margin: 0; }
+.menu__plan { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 2px 12px 8px; font-size: 13px; }
+.menu__plan-text { color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.menu__plan-text--warn { color: #b45309; font-weight: 600; }
+.menu__plan-link { color: var(--accent); font-weight: 600; }
+.plan-badge {
+  padding: 2px 10px; border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, #3b82f6, #7c3aed); color: #fff; font-size: 12px; font-weight: 700;
+}
+.plan-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; }
 .menu__sep { height: 1px; margin: 6px 0; background: var(--line); }
 .pill__count {
   min-width: 18px; height: 18px; padding: 0 5px; margin-left: 2px;

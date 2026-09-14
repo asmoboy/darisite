@@ -191,10 +191,15 @@ async function sendRequest({ name, email, plan, billing, message = "" }) {
     const { data, error } = await sb.functions.invoke("payment-link", {
       body: { plan, billing: billing.startsWith("Jährlich") ? "yearly" : "monthly" },
     });
-    if (!error && data?.url) link = data.url;
+    if (!error && data?.url) {
+      // E-Mail vorausfüllen und Konto-ID mitgeben, damit der Webhook die Zahlung dem Konto zuordnet
+      const params = new URLSearchParams({ prefilled_email: email });
+      if (me?.id) params.set("client_reference_id", me.id);
+      link = `${data.url}?${params}`;
+    }
   } catch {}
   const autoresponse = link
-    ? `Hallo ${name},\n\ndanke für deine Anfrage! Hier ist dein Zahlungslink für den Plan „${plan}“ (${billing}):\n\n${link}\n\nÜber den Link bezahlst du sicher im Stripe-Checkout. Direkt danach schalten wir deine Community frei.\n\nViele Grüße\ndein kreisel-Team`
+    ? `Hallo ${name},\n\ndanke für deine Anfrage! Hier ist dein Zahlungslink für den Plan „${plan}“ (${billing}):\n\n${link}\n\nÜber den Link bezahlst du sicher im Stripe-Checkout. Direkt nach der Zahlung wird dein Plan automatisch freigeschaltet – du siehst ihn in deinem kreisel-Konto mit dieser E-Mail-Adresse.\n\nViele Grüße\ndein kreisel-Team`
     : `Hallo ${name},\n\ndanke für deine Anfrage für den Plan „${plan}“ (${billing}). Wir schicken dir in Kürze deinen persönlichen Stripe-Zahlungslink per E-Mail.\n\nViele Grüße\ndein kreisel-Team`;
 
   const res = await fetch(`https://formsubmit.co/ajax/${CONTACT_EMAIL}`, {
@@ -522,12 +527,19 @@ async function loadMe(session) {
   if (!user) {
     me = null;
   } else {
-    const { data, error } = await sb.from("memberships").select("community_id").eq("user_id", user.id);
+    const [memberships, subscriptions] = await Promise.all([
+      sb.from("memberships").select("community_id").eq("user_id", user.id),
+      sb.from("subscriptions")
+        .select("plan, billing, status, cancel_at_period_end, current_period_end")
+        .order("updated_at", { ascending: false }),
+    ]);
+    const subs = subscriptions.data ?? [];
     me = {
       id: user.id,
       email: user.email,
       name: user.user_metadata?.name || user.email.split("@")[0],
-      joined: error ? [] : data.map((r) => r.community_id),
+      joined: memberships.error ? [] : memberships.data.map((r) => r.community_id),
+      subscription: subs.find((s) => ACTIVE_STATUSES.includes(s.status)) ?? subs[0] ?? null,
     };
   }
   renderAccount();
@@ -556,6 +568,26 @@ if (sb) {
   });
 }
 
+const ACTIVE_STATUSES = ["active", "trialing"];
+
+function planStatusHtml(sub) {
+  const date = (iso) => new Date(iso).toLocaleDateString("de-DE");
+  if (!sub) {
+    return `<span class="menu__plan-text">Noch kein Plan gebucht</span><a class="menu__plan-link" href="#preise">Plan wählen</a>`;
+  }
+  const badge = `<span class="plan-badge">${escapeHtml(sub.plan)}</span>`;
+  if (ACTIVE_STATUSES.includes(sub.status)) {
+    const until = sub.current_period_end
+      ? ` · ${sub.cancel_at_period_end ? "endet" : "verlängert sich"} am ${date(sub.current_period_end)}`
+      : "";
+    return `${badge}<span class="menu__plan-text"><span class="plan-dot"></span>Aktiv${until}</span>`;
+  }
+  if (sub.status === "past_due" || sub.status === "unpaid" || sub.status === "incomplete") {
+    return `${badge}<span class="menu__plan-text menu__plan-text--warn">Zahlung offen</span>`;
+  }
+  return `${badge}<span class="menu__plan-text">Beendet</span><a class="menu__plan-link" href="#preise">Neu buchen</a>`;
+}
+
 const $accountBtn = document.getElementById("account-btn");
 const $accountMenu = document.getElementById("account-menu");
 
@@ -566,6 +598,7 @@ function renderAccount() {
   $accountBtn.textContent = initials(me.name);
   document.getElementById("account-name").textContent = me.name;
   document.getElementById("account-email").textContent = me.email;
+  document.getElementById("account-plan").innerHTML = planStatusHtml(me.subscription);
   document.getElementById("account-joined").innerHTML = me.joined.length
     ? me.joined.map(byId).filter(Boolean).map((c) =>
         `<a class="menu__item" href="#community-${c.id}"><span>${c.emoji} ${escapeHtml(c.name)}</span></a>`).join("")
