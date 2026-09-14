@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>kreisel – Communities entdecken</title>
   <meta name="description" content="Entdecke Communities zu Business, Fitness, Kreativem und mehr – oder erstelle deine eigene. Plan anfragen, Zahlungslink per E-Mail erhalten und sicher über Stripe bezahlen.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%232563eb'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23fff'/%3E%3C/svg%3E">
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,11 +13,10 @@
 
   <header class="header">
     <div class="header__inner">
-      <button class="brand" type="button" aria-haspopup="true" aria-label="Menü öffnen">
-        <span class="brand__mark" aria-hidden="true"></span>
+      <a class="brand" href="index.html" aria-label="kreisel – zur Startseite">
+        <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg-head" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg-head)"/><g class="logo__spin"><circle cx="16" cy="16" r="8.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="38 15.4"/><circle cx="21.2" cy="9.3" r="1.7" fill="#fff"/></g><circle cx="16" cy="16" r="2.8" fill="#fff"/></svg>
         <span class="brand__word">kreisel</span>
-        <svg class="brand__caret" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 7.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
+      </a>
 
       <nav class="header__nav" aria-label="Hauptnavigation">
         <a href="#entdecken">Entdecken</a>
@@ -28,10 +27,11 @@
 
       <div class="header__actions">
         <a class="btn-solid" href="#anfrage">Plan anfragen</a>
-        <button class="icon-btn" type="button" aria-label="Sprache wählen">
+        <button class="icon-btn" type="button" aria-label="Sprache wählen" popovertarget="lang-menu">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
         </button>
-        <a class="btn-outline" href="#">Anmelden</a>
+        <button class="btn-outline" type="button" id="login-btn">Anmelden</button>
+        <button class="account" type="button" id="account-btn" popovertarget="account-menu" aria-label="Konto-Menü" hidden></button>
       </div>
     </div>
   </header>
@@ -57,10 +57,10 @@
     <nav class="filters" id="entdecken" aria-label="Kategorien">
       <div class="filters__scroll" id="filters" role="tablist"></div>
       <div class="filters__end">
-        <button class="pill" type="button">Mehr…</button>
-        <button class="pill pill--icon" type="button">
+        <button class="pill" type="button" popovertarget="more-menu">Mehr…</button>
+        <button class="pill pill--icon" type="button" popovertarget="filter-menu">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-          Filter
+          Filter<span class="pill__count" id="filter-count" hidden></span>
         </button>
       </div>
     </nav>
@@ -105,7 +105,7 @@
           <h3 class="plan__name">Starter</h3>
           <p class="plan__desc">Für die erste eigene Community.</p>
           <p class="plan__price"><span class="plan__amount">34,90 €</span><span class="plan__period">/Monat</span></p>
-          <a class="plan__cta" href="#anfrage" data-plan="Starter">Starter anfragen</a>
+          <a class="plan__cta" href="#anfrage" data-plan="Starter">Zahlungslink erhalten</a>
           <ul class="plan__features">
             <li>1 Community</li>
             <li>Bis 250 Mitglieder</li>
@@ -120,7 +120,7 @@
           <h3 class="plan__name">Pro</h3>
           <p class="plan__desc">Für wachsende Communities mit bezahlten Mitgliedschaften.</p>
           <p class="plan__price"><span class="plan__amount">89 €</span><span class="plan__period">/Monat</span></p>
-          <a class="plan__cta plan__cta--solid" href="#anfrage" data-plan="Pro">Pro anfragen</a>
+          <a class="plan__cta plan__cta--solid" href="#anfrage" data-plan="Pro">Zahlungslink erhalten</a>
           <ul class="plan__features">
             <li>3 Communities</li>
             <li>Bis 2.500 Mitglieder</li>
@@ -135,7 +135,7 @@
           <h3 class="plan__name">Business</h3>
           <p class="plan__desc">Für Teams, die mehrere Marken betreuen.</p>
           <p class="plan__price"><span class="plan__amount">240 €</span><span class="plan__period">/Monat</span></p>
-          <a class="plan__cta" href="#anfrage" data-plan="Business">Business anfragen</a>
+          <a class="plan__cta" href="#anfrage" data-plan="Business">Zahlungslink erhalten</a>
           <ul class="plan__features">
             <li>Unbegrenzte Communities</li>
             <li>Unbegrenzte Mitglieder</li>
@@ -157,7 +157,8 @@
       </div>
 
       <div class="request">
-        <form class="request__form" id="request-form" novalidate>
+        <div class="request__form">
+        <form class="request__fields" data-request novalidate>
           <div class="field">
             <label for="rq-name">Name</label>
             <input id="rq-name" name="name" type="text" autocomplete="name" required>
@@ -189,9 +190,10 @@
             <textarea id="rq-msg" name="message" rows="4"></textarea>
           </div>
           <p class="request__error" id="request-error" role="alert" hidden></p>
-          <button class="request__submit" type="submit">Zahlungslink anfordern</button>
-          <p class="request__hint" id="request-done" role="status" hidden>Dein E-Mail-Programm öffnet sich mit der fertigen Anfrage – bitte nur noch auf „Senden“ klicken. Klappt das nicht, schreib uns direkt an <a class="request__mail" href="#"></a>.</p>
+          <button class="request__submit" type="submit">Zahlungslink per E-Mail erhalten</button>
         </form>
+        <div class="request__success" role="status" hidden></div>
+        </div>
 
         <aside class="request__info">
           <h3>Sicher bezahlen mit Stripe</h3>
@@ -253,7 +255,7 @@
   <footer class="footer">
     <div class="footer__inner">
       <div class="footer__brand">
-        <span class="footer__logo"><span class="brand__mark" aria-hidden="true"></span><span class="brand__word">kreisel</span></span>
+        <a class="footer__logo brand" href="index.html" aria-label="kreisel – zur Startseite"><svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg-foot" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg-foot)"/><g class="logo__spin"><circle cx="16" cy="16" r="8.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="38 15.4"/><circle cx="21.2" cy="9.3" r="1.7" fill="#fff"/></g><circle cx="16" cy="16" r="2.8" fill="#fff"/></svg><span class="brand__word">kreisel</span></a>
         <p class="footer__tag">Communities entdecken und aufbauen.</p>
       </div>
       <div class="footer__col">
@@ -264,28 +266,128 @@
       </div>
       <div class="footer__col">
         <h3>Unternehmen</h3>
-        <a href="#">Über uns</a>
-        <a href="#">Karriere</a>
-        <a href="#">Affiliates</a>
+        <a href="ueber-uns.html">Über uns</a>
+        <a href="karriere.html">Karriere</a>
+        <a href="affiliates.html">Affiliates</a>
       </div>
       <div class="footer__col">
         <h3>Hilfe</h3>
         <a href="#faq">FAQ</a>
         <a href="#anfrage">Plan anfragen</a>
-        <a href="#">Support</a>
-        <a href="#">Status</a>
+        <a href="support.html">Support</a>
+        <a href="status.html">Status</a>
       </div>
     </div>
     <div class="footer__bar">
       <p>© 2026 kreisel</p>
       <nav class="footer__legal" aria-label="Rechtliches">
-        <a href="#">Impressum</a>
-        <a href="#">Datenschutz</a>
-        <a href="#">AGB</a>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+        <a href="agb.html">AGB</a>
       </nav>
     </div>
   </footer>
 
+  <!-- Menüs -->
+  <div class="menu" id="lang-menu" popover>
+    <p class="menu__label">Sprache</p>
+    <button class="menu__item is-active" type="button"><span>🇩🇪 Deutsch</span><span aria-hidden="true">✓</span></button>
+    <button class="menu__item" type="button" disabled><span>🇬🇧 English</span><span class="menu__tag">bald</span></button>
+  </div>
+
+  <div class="menu" id="account-menu" popover>
+    <div class="menu__head"><strong id="account-name"></strong><small id="account-email"></small></div>
+    <p class="menu__label">Meine Communities</p>
+    <div id="account-joined"></div>
+    <div class="menu__sep"></div>
+    <a class="menu__item" href="#anfrage">Eigene Community starten</a>
+    <button class="menu__item" type="button" id="logout-btn">Abmelden</button>
+  </div>
+
+  <div class="menu" id="more-menu" popover></div>
+
+  <div class="menu menu--wide" id="filter-menu" popover>
+    <p class="menu__label">Sortieren</p>
+    <label class="menu__opt"><input type="radio" name="sort" value="popular" checked> Meiste Mitglieder</label>
+    <label class="menu__opt"><input type="radio" name="sort" value="name"> Name (A–Z)</label>
+    <div class="menu__sep"></div>
+    <p class="menu__label">Preis</p>
+    <label class="menu__opt"><input type="radio" name="price" value="all" checked> Alle</label>
+    <label class="menu__opt"><input type="radio" name="price" value="free"> Kostenlos</label>
+    <label class="menu__opt"><input type="radio" name="price" value="paid"> Bezahlt</label>
+    <div class="menu__sep"></div>
+    <button class="menu__item" type="button" id="filter-reset">Filter zurücksetzen</button>
+  </div>
+
+  <!-- Anmelden / Registrieren -->
+  <dialog class="dialog" id="auth-dialog" aria-labelledby="auth-title">
+    <form method="dialog"><button class="dialog__close" aria-label="Schließen">×</button></form>
+    <svg class="logo dialog__logo" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg-auth" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg-auth)"/><g class="logo__spin"><circle cx="16" cy="16" r="8.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="38 15.4"/><circle cx="21.2" cy="9.3" r="1.7" fill="#fff"/></g><circle cx="16" cy="16" r="2.8" fill="#fff"/></svg>
+    <h2 class="dialog__title" id="auth-title">Willkommen zurück</h2>
+    <p class="dialog__sub" id="auth-sub">Melde dich bei kreisel an.</p>
+    <div class="tabs">
+      <button class="tabs__btn is-active" type="button" data-mode="login">Anmelden</button>
+      <button class="tabs__btn" type="button" data-mode="register">Registrieren</button>
+    </div>
+    <form class="dialog__form" id="auth-form" novalidate>
+      <div class="field" id="auth-name-field" hidden>
+        <label for="au-name">Name</label>
+        <input id="au-name" name="name" type="text" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="au-email">E-Mail-Adresse</label>
+        <input id="au-email" name="email" type="email" autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="au-pw">Passwort</label>
+        <input id="au-pw" name="password" type="password" autocomplete="current-password">
+        <small id="auth-pw-hint" hidden>Mindestens 8 Zeichen.</small>
+      </div>
+      <p class="request__error" id="auth-error" role="alert" hidden></p>
+      <button class="request__submit" type="submit" id="auth-submit">Anmelden</button>
+    </form>
+  </dialog>
+
+  <!-- Zahlungslink anfordern (Preis-Buttons) -->
+  <dialog class="dialog" id="plan-dialog" aria-labelledby="plan-title">
+    <form method="dialog"><button class="dialog__close" aria-label="Schließen">×</button></form>
+    <p class="dialog__eyebrow" id="plan-eyebrow"></p>
+    <h2 class="dialog__title" id="plan-title">Zahlungslink anfordern</h2>
+    <p class="dialog__sub">Wir schicken dir den Stripe-Zahlungslink direkt per E-Mail.</p>
+    <div class="request__form dialog__request">
+      <form class="request__fields" data-request novalidate>
+        <input type="hidden" name="plan">
+        <div class="field">
+          <label for="pd-name">Name</label>
+          <input id="pd-name" name="name" type="text" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="pd-email">E-Mail-Adresse</label>
+          <input id="pd-email" name="email" type="email" autocomplete="email" required>
+          <small>An diese Adresse schicken wir deinen Zahlungslink.</small>
+        </div>
+        <div class="field">
+          <label for="pd-billing">Abrechnung</label>
+          <select id="pd-billing" name="billing">
+            <option>Monatlich</option>
+            <option>Jährlich (2 Monate gratis)</option>
+          </select>
+        </div>
+        <p class="request__error" role="alert" hidden></p>
+        <button class="request__submit" type="submit">Zahlungslink per E-Mail erhalten</button>
+        <p class="dialog__note">🔒 Bezahlung sicher im Stripe-Checkout</p>
+      </form>
+      <div class="request__success" role="status" hidden></div>
+    </div>
+  </dialog>
+
+  <!-- Community-Details -->
+  <dialog class="dialog dialog--community" id="community-dialog" aria-label="Community">
+    <form method="dialog"><button class="dialog__close" aria-label="Schließen">×</button></form>
+    <div id="community-body"></div>
+  </dialog>
+
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
