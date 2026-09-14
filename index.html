@@ -334,18 +334,21 @@
         <label for="au-name">Name</label>
         <input id="au-name" name="name" type="text" autocomplete="name">
       </div>
-      <div class="field">
+      <div class="field" id="auth-email-field">
         <label for="au-email">E-Mail-Adresse</label>
         <input id="au-email" name="email" type="email" autocomplete="email">
       </div>
-      <div class="field">
+      <div class="field" id="auth-pw-field">
         <label for="au-pw">Passwort</label>
         <input id="au-pw" name="password" type="password" autocomplete="current-password">
         <small id="auth-pw-hint" hidden>Mindestens 8 Zeichen.</small>
       </div>
+      <button class="auth__link" type="button" id="auth-forgot">Passwort vergessen?</button>
       <p class="request__error" id="auth-error" role="alert" hidden></p>
       <button class="request__submit" type="submit" id="auth-submit">Anmelden</button>
+      <button class="auth__link" type="button" id="auth-back" hidden>← Zurück zur Anmeldung</button>
     </form>
+    <p class="auth__info" id="auth-info" role="status" hidden></p>
   </dialog>
 
   <!-- Zahlungslink anfordern (Preis-Buttons) -->
@@ -387,6 +390,7 @@
     <div id="community-body"></div>
   </dialog>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="config.js"></script>
   <script src="app.js"></script>
 </body>

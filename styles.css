@@ -493,6 +493,16 @@ button { font: inherit; color: inherit; }
 .dialog__title { margin: 16px 0 4px; text-align: center; font-size: 24px; font-weight: 800; letter-spacing: -.03em; }
 .dialog__sub { margin: 0; text-align: center; color: var(--muted); }
 .dialog__form { display: grid; gap: 14px; }
+.auth__link {
+  justify-self: end; margin-top: -6px; padding: 0; border: 0; background: none; cursor: pointer;
+  color: var(--accent); font-size: 13px; font-weight: 500;
+}
+#auth-back { justify-self: center; margin-top: 0; }
+.auth__link:hover { text-decoration: underline; }
+.auth__info {
+  margin: 20px 0 0; padding: 16px; border-radius: var(--radius-sm);
+  background: #eff6ff; color: #1e3a8a; text-align: center; font-size: 15px;
+}
 .dialog__note { margin: 0; text-align: center; color: var(--faint); font-size: 13px; }
 .tabs {
   display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin: 22px 0 18px;

@@ -304,14 +304,6 @@ document.querySelectorAll("[data-plan]").forEach((btn) =>
 );
 
 // ---------- Hilfen ----------
-const store = {
-  get(key, fallback) {
-    try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
-  },
-  set(key, value) {
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
-  },
-};
 const byId = (id) => COMMUNITIES.find((c) => c.id === id);
 const CAT_LABEL = Object.fromEntries(CATEGORIES.map((c) => [c.id, `${c.emoji} ${c.label}`]));
 
@@ -389,47 +381,49 @@ document.getElementById("filter-reset").addEventListener("click", () => {
   render();
 });
 
-// ---------- Konten (lokal im Browser gespeichert) ----------
-const USERS_KEY = "kreisel.users";
-const SESSION_KEY = "kreisel.session";
+// ---------- Konten (Supabase) ----------
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const sb = window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
 
 const $authDialog = document.getElementById("auth-dialog");
 const $authForm = document.getElementById("auth-form");
 const $authError = document.getElementById("auth-error");
+const $authInfo = document.getElementById("auth-info");
+const $authSubmit = document.getElementById("auth-submit");
 let authMode = "login";
 let pendingJoin = null;
+let me = null; // { id, name, email, joined: [communityId, …] }
 
-function currentUser() {
-  const email = store.get(SESSION_KEY, null);
-  const user = email && store.get(USERS_KEY, {})[email];
-  return user ? { ...user, email } : null;
-}
+const currentUser = () => me;
+const redirectUrl = () => location.origin + location.pathname;
 
-function updateUser(email, fn) {
-  const users = store.get(USERS_KEY, {});
-  fn(users[email]);
-  store.set(USERS_KEY, users);
-}
-
-async function hashPassword(email, password) {
-  const data = new TextEncoder().encode(`${email}:${password}`);
-  if (!crypto.subtle) return btoa(String.fromCharCode(...data));
-  const buf = await crypto.subtle.digest("SHA-256", data);
-  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
+const AUTH_TEXT = {
+  login:    { title: "Willkommen zurück", sub: "Melde dich bei kreisel an.", submit: "Anmelden" },
+  register: { title: "Konto erstellen", sub: "Kostenlos registrieren und Communities beitreten.", submit: "Konto erstellen" },
+  reset:    { title: "Passwort vergessen", sub: "Wir schicken dir einen Link zum Zurücksetzen.", submit: "Link senden" },
+  newpw:    { title: "Neues Passwort", sub: "Lege ein neues Passwort für dein Konto fest.", submit: "Passwort speichern" },
+};
 
 function setAuthMode(mode, note) {
   authMode = mode;
-  const register = mode === "register";
+  const t = AUTH_TEXT[mode];
   $authDialog.querySelectorAll("[data-mode]").forEach((b) => b.classList.toggle("is-active", b.dataset.mode === mode));
-  document.getElementById("auth-name-field").hidden = !register;
-  document.getElementById("auth-pw-hint").hidden = !register;
-  document.getElementById("au-pw").autocomplete = register ? "new-password" : "current-password";
-  document.getElementById("auth-title").textContent = register ? "Konto erstellen" : "Willkommen zurück";
-  document.getElementById("auth-sub").textContent = note || (register ? "Kostenlos registrieren und Communities beitreten." : "Melde dich bei kreisel an.");
-  document.getElementById("auth-submit").textContent = register ? "Konto erstellen" : "Anmelden";
+  $authDialog.querySelector(".tabs").hidden = mode === "reset" || mode === "newpw";
+  document.getElementById("auth-name-field").hidden = mode !== "register";
+  document.getElementById("auth-email-field").hidden = mode === "newpw";
+  document.getElementById("auth-pw-field").hidden = mode === "reset";
+  document.getElementById("auth-pw-hint").hidden = mode === "login";
+  document.getElementById("auth-forgot").hidden = mode !== "login";
+  document.getElementById("auth-back").hidden = mode !== "reset";
+  document.getElementById("au-pw").autocomplete = mode === "login" ? "current-password" : "new-password";
+  document.getElementById("auth-title").textContent = t.title;
+  document.getElementById("auth-sub").textContent = note || t.sub;
+  $authSubmit.textContent = t.submit;
+  $authForm.hidden = false;
   $authError.hidden = true;
+  $authInfo.hidden = true;
 }
 
 function openAuth(mode = "login", note) {
@@ -438,57 +432,136 @@ function openAuth(mode = "login", note) {
   if (!$authDialog.open) $authDialog.showModal();
 }
 
+function authErrorText(err) {
+  const m = (err?.message || "").toLowerCase();
+  if (m.includes("invalid login")) return "E-Mail-Adresse oder Passwort ist falsch.";
+  if (m.includes("not confirmed")) return "Bitte bestätige zuerst deine E-Mail-Adresse über den Link in unserer E-Mail.";
+  if (m.includes("already registered")) return "Mit dieser E-Mail gibt es schon ein Konto. Melde dich an.";
+  if (err?.status === 429 || m.includes("rate limit")) return "Zu viele Versuche. Bitte warte kurz und versuch es dann erneut.";
+  if (m.includes("password")) return "Das Passwort ist zu schwach. Bitte wähle ein längeres Passwort.";
+  return "Das hat leider nicht geklappt. Bitte versuch es erneut.";
+}
+
 document.getElementById("login-btn").addEventListener("click", () => openAuth("login"));
 $authDialog.querySelectorAll("[data-mode]").forEach((b) =>
   b.addEventListener("click", () => setAuthMode(b.dataset.mode))
 );
+document.getElementById("auth-forgot").addEventListener("click", () => setAuthMode("reset"));
+document.getElementById("auth-back").addEventListener("click", () => setAuthMode("login"));
 
 $authForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const data = Object.fromEntries(new FormData($authForm));
-  const email = data.email.trim().toLowerCase();
-  const name = data.name.trim();
+  const email = (data.email || "").trim().toLowerCase();
+  const name = (data.name || "").trim();
+  const password = data.password || "";
   const fail = (msg) => { $authError.textContent = msg; $authError.hidden = false; };
+  const info = (msg) => { $authForm.hidden = true; $authInfo.textContent = msg; $authInfo.hidden = false; };
 
-  if (!EMAIL_RE.test(email)) return fail("Bitte gib eine gültige E-Mail-Adresse an.");
-  const users = store.get(USERS_KEY, {});
-  const hash = await hashPassword(email, data.password);
-
-  if (authMode === "register") {
-    if (!name) return fail("Bitte gib deinen Namen an.");
-    if (data.password.length < 8) return fail("Das Passwort muss mindestens 8 Zeichen lang sein.");
-    if (users[email]) return fail("Mit dieser E-Mail gibt es schon ein Konto. Melde dich an.");
-    users[email] = { name, password: hash, joined: [] };
-    store.set(USERS_KEY, users);
-  } else if (!users[email] || users[email].password !== hash) {
-    return fail("E-Mail-Adresse oder Passwort ist falsch.");
+  if (!sb) return fail("Konten sind gerade nicht verfügbar. Bitte versuch es später erneut.");
+  if (authMode !== "newpw" && !EMAIL_RE.test(email)) return fail("Bitte gib eine gültige E-Mail-Adresse an.");
+  if (authMode === "register" && !name) return fail("Bitte gib deinen Namen an.");
+  if ((authMode === "register" || authMode === "newpw") && password.length < 8) {
+    return fail("Das Passwort muss mindestens 8 Zeichen lang sein.");
   }
+  if (authMode === "login" && !password) return fail("Bitte gib dein Passwort ein.");
 
-  store.set(SESSION_KEY, email);
-  const joinId = pendingJoin;
-  $authDialog.close();
-  renderAccount();
-  if (joinId) {
-    updateUser(email, (u) => { if (!u.joined.includes(joinId)) u.joined.push(joinId); });
-    renderAccount();
-    openCommunity(joinId);
+  $authError.hidden = true;
+  $authSubmit.disabled = true;
+  $authSubmit.textContent = "Einen Moment…";
+
+  try {
+    if (authMode === "login") {
+      const { data: res, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      await afterLogin(res.session);
+    } else if (authMode === "register") {
+      const { data: res, error } = await sb.auth.signUp({
+        email, password, options: { data: { name }, emailRedirectTo: redirectUrl() },
+      });
+      if (error) throw error;
+      if (res.user && res.user.identities?.length === 0) throw new Error("already registered");
+      if (res.session) await afterLogin(res.session);
+      else info(`Fast geschafft! Wir haben dir eine E-Mail an ${email} geschickt. Klicke auf den Link darin, um dein Konto zu bestätigen.`);
+    } else if (authMode === "reset") {
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl() });
+      if (error) throw error;
+      info(`Falls es ein Konto zu ${email} gibt, haben wir dir einen Link zum Zurücksetzen geschickt.`);
+    } else {
+      const { error } = await sb.auth.updateUser({ password });
+      if (error) throw error;
+      info("Dein neues Passwort ist gespeichert. Du bist angemeldet.");
+    }
+  } catch (err) {
+    fail(authErrorText(err));
+  } finally {
+    $authSubmit.disabled = false;
+    $authSubmit.textContent = AUTH_TEXT[authMode].submit;
   }
 });
 $authDialog.addEventListener("close", () => { pendingJoin = null; });
+
+async function afterLogin(session) {
+  const joinId = pendingJoin;
+  $authDialog.close();
+  await loadMe(session);
+  if (joinId && me) {
+    try { await setMembership(joinId, true); } catch {}
+    openCommunity(joinId);
+  }
+}
+
+async function loadMe(session) {
+  const user = session?.user;
+  if (!user) {
+    me = null;
+  } else {
+    const { data, error } = await sb.from("memberships").select("community_id").eq("user_id", user.id);
+    me = {
+      id: user.id,
+      email: user.email,
+      name: user.user_metadata?.name || user.email.split("@")[0],
+      joined: error ? [] : data.map((r) => r.community_id),
+    };
+  }
+  renderAccount();
+  if ($communityDialog.open && openCommunityId) renderCommunity(byId(openCommunityId));
+}
+
+async function setMembership(id, join) {
+  const { error } = join
+    ? await sb.from("memberships").upsert(
+        { user_id: me.id, community_id: id },
+        { onConflict: "user_id,community_id", ignoreDuplicates: true }
+      )
+    : await sb.from("memberships").delete().eq("user_id", me.id).eq("community_id", id);
+  if (error) throw error;
+  me.joined = join ? [...new Set([...me.joined, id])] : me.joined.filter((x) => x !== id);
+  renderAccount();
+}
+
+if (sb) {
+  sb.auth.onAuthStateChange((event, session) => {
+    // Supabase-Aufrufe nicht direkt im Callback ausführen (sonst Deadlock)
+    setTimeout(() => {
+      loadMe(session);
+      if (event === "PASSWORD_RECOVERY") openAuth("newpw");
+    }, 0);
+  });
+}
 
 const $accountBtn = document.getElementById("account-btn");
 const $accountMenu = document.getElementById("account-menu");
 
 function renderAccount() {
-  const user = currentUser();
-  document.getElementById("login-btn").hidden = !!user;
-  $accountBtn.hidden = !user;
-  if (!user) return;
-  $accountBtn.textContent = initials(user.name);
-  document.getElementById("account-name").textContent = user.name;
-  document.getElementById("account-email").textContent = user.email;
-  document.getElementById("account-joined").innerHTML = user.joined.length
-    ? user.joined.map(byId).filter(Boolean).map((c) =>
+  document.getElementById("login-btn").hidden = !!me;
+  $accountBtn.hidden = !me;
+  if (!me) return;
+  $accountBtn.textContent = initials(me.name);
+  document.getElementById("account-name").textContent = me.name;
+  document.getElementById("account-email").textContent = me.email;
+  document.getElementById("account-joined").innerHTML = me.joined.length
+    ? me.joined.map(byId).filter(Boolean).map((c) =>
         `<a class="menu__item" href="#community-${c.id}"><span>${c.emoji} ${escapeHtml(c.name)}</span></a>`).join("")
     : `<p class="menu__empty">Noch keiner Community beigetreten.</p>`;
 }
@@ -496,19 +569,20 @@ function renderAccount() {
 $accountMenu.addEventListener("click", (e) => {
   if (e.target.closest("a")) $accountMenu.hidePopover();
 });
-document.getElementById("logout-btn").addEventListener("click", () => {
-  store.set(SESSION_KEY, null);
+document.getElementById("logout-btn").addEventListener("click", async () => {
   $accountMenu.hidePopover();
+  await sb?.auth.signOut();
+  me = null;
   renderAccount();
 });
 
 // ---------- Community-Details ----------
 const $communityDialog = document.getElementById("community-dialog");
 const $communityBody = document.getElementById("community-body");
+let openCommunityId = null;
 
 function renderCommunity(c) {
-  const user = currentUser();
-  const joined = user?.joined.includes(c.id);
+  const joined = me?.joined.includes(c.id);
   const free = c.price === "Kostenlos";
   const [from, to] = c.colors;
   $communityBody.innerHTML = `
@@ -534,36 +608,40 @@ function renderCommunity(c) {
         ? `<p class="community__joined">✓ Du bist Mitglied dieser Community</p>
            <button class="btn-ghost" type="button" data-leave="${c.id}">Community verlassen</button>`
         : `<button class="request__submit" type="button" data-join="${c.id}">${free ? "Kostenlos beitreten" : `Beitreten · ${c.price}`}</button>
-           ${user ? "" : `<p class="dialog__note">Zum Beitreten brauchst du ein kostenloses kreisel-Konto.</p>`}`}
+           ${me ? "" : `<p class="dialog__note">Zum Beitreten brauchst du ein kostenloses kreisel-Konto.</p>`}`}
     </div>`;
 }
 
 function openCommunity(id) {
   const c = byId(id);
   if (!c) return;
+  openCommunityId = id;
   renderCommunity(c);
   if (!$communityDialog.open) $communityDialog.showModal();
 }
 
-$communityBody.addEventListener("click", (e) => {
+$communityBody.addEventListener("click", async (e) => {
   const btn = e.target.closest("[data-join], [data-leave]");
   if (!btn) return;
   const id = Number(btn.dataset.join || btn.dataset.leave);
-  const user = currentUser();
-  if (!user) {
+  if (!me) {
     $communityDialog.close();
     openAuth("register", "Erstelle ein kostenloses Konto, um beizutreten.");
     pendingJoin = id;
     return;
   }
-  updateUser(user.email, (u) => {
-    u.joined = btn.dataset.join ? [...new Set([...u.joined, id])] : u.joined.filter((x) => x !== id);
-  });
-  renderCommunity(byId(id));
-  renderAccount();
+  btn.disabled = true;
+  try {
+    await setMembership(id, !!btn.dataset.join);
+    renderCommunity(byId(id));
+  } catch {
+    btn.disabled = false;
+    btn.textContent = "Fehler – bitte erneut versuchen";
+  }
 });
 
 $communityDialog.addEventListener("close", () => {
+  openCommunityId = null;
   if (location.hash.startsWith("#community-")) history.replaceState(null, "", location.pathname + location.search);
 });
 
