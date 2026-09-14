@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kreisel",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["serve.mjs", "4455"],
+      "port": 4455
+    }
+  ]
+}

@@ -15,8 +15,9 @@ const types = {
 };
 
 createServer(async (req, res) => {
-  let path = normalize(decodeURIComponent(new URL(req.url, "http://x").pathname));
-  if (path.endsWith("/")) path += "index.html";
+  let pathname = decodeURIComponent(new URL(req.url, "http://x").pathname);
+  if (pathname.endsWith("/")) pathname += "index.html";
+  const path = normalize(pathname);
   const file = join(root, path);
   if (!file.startsWith(root)) { res.writeHead(403).end(); return; }
   try {
