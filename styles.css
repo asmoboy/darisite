@@ -377,6 +377,48 @@ button { font: inherit; color: inherit; }
 }
 .cta__btn:hover { background: var(--accent-hover); }
 
+/* ---------- Plan-Anfrage ---------- */
+.btn-solid {
+  display: inline-flex; align-items: center; height: 38px; padding: 0 16px;
+  background: var(--accent); color: #fff; border-radius: var(--radius-pill);
+  font-size: 14px; font-weight: 600; transition: background .15s;
+}
+.btn-solid:hover { background: var(--accent-hover); }
+.request {
+  display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px;
+  max-width: 960px; margin: 0 auto;
+}
+.request__form, .request__info {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px;
+}
+.request__form { display: grid; gap: 16px; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field label { font-size: 14px; font-weight: 600; }
+.field__opt { color: var(--faint); font-weight: 400; }
+.field small { color: var(--faint); font-size: 12px; }
+.field input, .field select, .field textarea {
+  width: 100%; padding: 11px 14px; font: inherit; font-size: 15px; color: var(--text);
+  background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+.field textarea { resize: vertical; }
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--accent); background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.request__submit {
+  height: 48px; border: 0; border-radius: var(--radius-pill); cursor: pointer;
+  background: var(--accent); color: #fff; font: inherit; font-size: 15px; font-weight: 600;
+  transition: background .15s;
+}
+.request__submit:hover { background: var(--accent-hover); }
+.request__error { margin: 0; color: #b91c1c; font-size: 14px; }
+.request__hint { margin: 0; color: var(--muted); font-size: 14px; }
+.request__hint a { color: var(--accent); }
+.request__info h3 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+.request__small { margin: 20px 0 0; color: var(--faint); font-size: 13px; }
+
 /* ---------- Footer (erweitert) ---------- */
 .footer__inner {
   max-width: 1160px; margin: 0 auto; padding: 48px 24px 32px;
@@ -404,6 +446,7 @@ button { font: inherit; color: inherit; }
   .steps { grid-template-columns: 1fr; gap: 16px; }
   .plans { grid-template-columns: 1fr; gap: 20px; }
   .plan--featured { order: -1; }
+  .request { grid-template-columns: 1fr; }
   .footer__inner { grid-template-columns: 1fr 1fr; gap: 28px; }
 }
 @media (max-width: 640px) {
@@ -411,6 +454,9 @@ button { font: inherit; color: inherit; }
   .stats dd { font-size: 20px; }
   .section { padding-top: 56px; }
   .cta { margin-top: 56px; padding: 40px 20px; }
+  .field-row { grid-template-columns: 1fr; }
+  .request__form, .request__info { padding: 20px; }
+  .header__actions .btn-solid { display: none; }
   .footer__inner { grid-template-columns: 1fr; padding: 36px 16px 24px; }
   .footer__bar { padding: 16px; justify-content: center; }
 }

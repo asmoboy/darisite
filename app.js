@@ -179,3 +179,51 @@ $pagination.addEventListener("click", (e) => {
 
 renderFilters();
 render();
+
+// ---------- Plan-Anfrage (Zahlungslink per E-Mail) ----------
+const CONTACT_EMAIL = "hallo@kreisel.de"; // TODO: eigene Adresse eintragen
+
+const $form = document.getElementById("request-form");
+const $plan = document.getElementById("rq-plan");
+const $error = document.getElementById("request-error");
+const $done = document.getElementById("request-done");
+
+document.querySelectorAll(".request__mail").forEach((a) => {
+  a.href = `mailto:${CONTACT_EMAIL}`;
+  a.textContent = CONTACT_EMAIL;
+});
+
+document.querySelectorAll("[data-plan]").forEach((a) =>
+  a.addEventListener("click", () => { $plan.value = a.dataset.plan; })
+);
+
+$form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData($form));
+  const name = data.name.trim();
+  const email = data.email.trim();
+
+  if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    $error.textContent = "Bitte gib deinen Namen und eine gültige E-Mail-Adresse an.";
+    $error.hidden = false;
+    return;
+  }
+  $error.hidden = true;
+
+  const subject = `Plan-Anfrage: ${data.plan} (${data.billing})`;
+  const body = [
+    "Hallo kreisel-Team,",
+    "",
+    `ich möchte den Plan „${data.plan}“ buchen und bitte um einen Stripe-Zahlungslink.`,
+    "",
+    `Name: ${name}`,
+    `E-Mail: ${email}`,
+    `Plan: ${data.plan}`,
+    `Abrechnung: ${data.billing}`,
+    data.message.trim() ? `\nZu meiner Community:\n${data.message.trim()}` : "",
+  ].join("\n");
+
+  window.location.href =
+    `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  $done.hidden = false;
+});

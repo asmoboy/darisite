@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>kreisel – Communities entdecken</title>
-  <meta name="description" content="Entdecke Communities zu Business, Fitness, Kreativem und mehr – oder erstelle deine eigene. Pläne ab 34,90 € im Monat.">
+  <meta name="description" content="Entdecke Communities zu Business, Fitness, Kreativem und mehr – oder erstelle deine eigene. Plan anfragen, Zahlungslink per E-Mail erhalten und sicher über Stripe bezahlen.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%232563eb'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23fff'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -27,6 +27,7 @@
       </nav>
 
       <div class="header__actions">
+        <a class="btn-solid" href="#anfrage">Plan anfragen</a>
         <button class="icon-btn" type="button" aria-label="Sprache wählen">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
         </button>
@@ -71,24 +72,24 @@
 
     <section class="section" id="ablauf">
       <div class="section__head">
-        <h2 class="section__title">In drei Schritten zur eigenen Community</h2>
-        <p class="section__sub">Kein Technik-Setup, kein Server, keine Plugins. Du brauchst nur ein Thema und die ersten Mitglieder.</p>
+        <h2 class="section__title">So kommst du zu deiner Community</h2>
+        <p class="section__sub">Kein Konto anlegen, keine Zahlungsdaten auf dieser Seite. Du bekommst einen persönlichen Zahlungslink und bezahlst direkt bei Stripe.</p>
       </div>
       <ol class="steps">
         <li class="step">
           <span class="step__num">1</span>
-          <h3 class="step__title">Thema festlegen</h3>
-          <p class="step__text">Wähle Kategorie, Name und Beschreibung. Deine Seite steht in wenigen Minuten und ist sofort auffindbar.</p>
+          <h3 class="step__title">Plan anfragen</h3>
+          <p class="step__text">Wähle deinen Plan und schick uns deine Anfrage mit Name und E-Mail-Adresse. Das dauert eine Minute.</p>
         </li>
         <li class="step">
           <span class="step__num">2</span>
-          <h3 class="step__title">Inhalte aufbauen</h3>
-          <p class="step__text">Kurse, Live-Calls, Feed und Kalender sind eingebaut. Lade Videos hoch oder starte einfach eine Diskussion.</p>
+          <h3 class="step__title">Zahlungslink per E-Mail</h3>
+          <p class="step__text">Wir melden uns persönlich, klären offene Fragen und schicken dir einen Stripe-Zahlungslink für genau deinen Plan.</p>
         </li>
         <li class="step">
           <span class="step__num">3</span>
-          <h3 class="step__title">Mitglieder gewinnen</h3>
-          <p class="step__text">Zahlungen, Rechnungen und Zugänge laufen automatisch. Du kümmerst dich um die Community, nicht um Verwaltung.</p>
+          <h3 class="step__title">Sicher bezahlen &amp; loslegen</h3>
+          <p class="step__text">Du bezahlst im Stripe-Checkout per Karte, Apple Pay oder Google Pay. Danach schalten wir deine Community frei.</p>
         </li>
       </ol>
     </section>
@@ -96,7 +97,7 @@
     <section class="section" id="preise">
       <div class="section__head">
         <h2 class="section__title">Preise</h2>
-        <p class="section__sub">14 Tage kostenlos testen, danach monatlich kündbar. Keine Einrichtungsgebühr.</p>
+        <p class="section__sub">Monatlich kündbar, keine Einrichtungsgebühr. Du zahlst erst, wenn du deinen Zahlungslink erhalten hast.</p>
       </div>
 
       <div class="plans">
@@ -104,7 +105,7 @@
           <h3 class="plan__name">Starter</h3>
           <p class="plan__desc">Für die erste eigene Community.</p>
           <p class="plan__price"><span class="plan__amount">34,90 €</span><span class="plan__period">/Monat</span></p>
-          <a class="plan__cta" href="#">Starter wählen</a>
+          <a class="plan__cta" href="#anfrage" data-plan="Starter">Starter anfragen</a>
           <ul class="plan__features">
             <li>1 Community</li>
             <li>Bis 250 Mitglieder</li>
@@ -119,7 +120,7 @@
           <h3 class="plan__name">Pro</h3>
           <p class="plan__desc">Für wachsende Communities mit bezahlten Mitgliedschaften.</p>
           <p class="plan__price"><span class="plan__amount">89 €</span><span class="plan__period">/Monat</span></p>
-          <a class="plan__cta plan__cta--solid" href="#">Pro wählen</a>
+          <a class="plan__cta plan__cta--solid" href="#anfrage" data-plan="Pro">Pro anfragen</a>
           <ul class="plan__features">
             <li>3 Communities</li>
             <li>Bis 2.500 Mitglieder</li>
@@ -134,7 +135,7 @@
           <h3 class="plan__name">Business</h3>
           <p class="plan__desc">Für Teams, die mehrere Marken betreuen.</p>
           <p class="plan__price"><span class="plan__amount">240 €</span><span class="plan__period">/Monat</span></p>
-          <a class="plan__cta" href="#">Business wählen</a>
+          <a class="plan__cta" href="#anfrage" data-plan="Business">Business anfragen</a>
           <ul class="plan__features">
             <li>Unbegrenzte Communities</li>
             <li>Unbegrenzte Mitglieder</li>
@@ -146,7 +147,64 @@
         </article>
       </div>
 
-      <p class="plans__note">Alle Preise verstehen sich inkl. MwSt. Bei jährlicher Zahlung entfallen zwei Monatsbeiträge.</p>
+      <p class="plans__note">Alle Preise verstehen sich inkl. MwSt. Bei jährlicher Zahlung entfallen zwei Monatsbeiträge. Die Zahlung wird sicher über Stripe abgewickelt.</p>
+    </section>
+
+    <section class="section" id="anfrage">
+      <div class="section__head">
+        <h2 class="section__title">Plan anfragen</h2>
+        <p class="section__sub">Schick uns deine Anfrage – du erhältst in der Regel innerhalb von 24 Stunden eine E-Mail mit deinem Stripe-Zahlungslink.</p>
+      </div>
+
+      <div class="request">
+        <form class="request__form" id="request-form" novalidate>
+          <div class="field">
+            <label for="rq-name">Name</label>
+            <input id="rq-name" name="name" type="text" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label for="rq-email">E-Mail-Adresse</label>
+            <input id="rq-email" name="email" type="email" autocomplete="email" required>
+            <small>An diese Adresse schicken wir deinen Zahlungslink.</small>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="rq-plan">Plan</label>
+              <select id="rq-plan" name="plan">
+                <option>Starter</option>
+                <option selected>Pro</option>
+                <option>Business</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="rq-billing">Abrechnung</label>
+              <select id="rq-billing" name="billing">
+                <option>Monatlich</option>
+                <option>Jährlich (2 Monate gratis)</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="rq-msg">Worum geht es in deiner Community? <span class="field__opt">(optional)</span></label>
+            <textarea id="rq-msg" name="message" rows="4"></textarea>
+          </div>
+          <p class="request__error" id="request-error" role="alert" hidden></p>
+          <button class="request__submit" type="submit">Zahlungslink anfordern</button>
+          <p class="request__hint" id="request-done" role="status" hidden>Dein E-Mail-Programm öffnet sich mit der fertigen Anfrage – bitte nur noch auf „Senden“ klicken. Klappt das nicht, schreib uns direkt an <a class="request__mail" href="#"></a>.</p>
+        </form>
+
+        <aside class="request__info">
+          <h3>Sicher bezahlen mit Stripe</h3>
+          <ul class="plan__features">
+            <li>Persönlicher Zahlungslink per E-Mail</li>
+            <li>Bezahlung im offiziellen Stripe-Checkout</li>
+            <li>Karte, Apple Pay und Google Pay</li>
+            <li>Keine Zahlungsdaten auf dieser Website</li>
+            <li>Rechnung automatisch per E-Mail</li>
+          </ul>
+          <p class="request__small">Achte darauf, dass der Link in unserer E-Mail auf <strong>checkout.stripe.com</strong> oder <strong>buy.stripe.com</strong> führt.</p>
+        </aside>
+      </div>
     </section>
 
     <section class="section" id="faq">
@@ -155,12 +213,20 @@
       </div>
       <div class="faq">
         <details class="faq__item">
-          <summary class="faq__q">Kann ich den Plan später wechseln?</summary>
-          <p class="faq__a">Ja, jederzeit. Beim Upgrade wird der Restbetrag des laufenden Monats angerechnet, beim Downgrade gilt der neue Preis ab der nächsten Abrechnung.</p>
+          <summary class="faq__q">Wie läuft die Bezahlung ab?</summary>
+          <p class="faq__a">Nach deiner Anfrage schicken wir dir eine E-Mail mit einem Stripe-Zahlungslink. Ein Klick öffnet den Stripe-Checkout, dort gibst du deine Zahlungsdaten ein und bist fertig. Wir sehen deine Kartendaten zu keinem Zeitpunkt.</p>
         </details>
         <details class="faq__item">
-          <summary class="faq__q">Was passiert nach den 14 Testtagen?</summary>
-          <p class="faq__a">Der Test endet automatisch. Es wird nichts abgebucht, solange du keinen Plan auswählst – eine Kündigung ist nicht nötig.</p>
+          <summary class="faq__q">Wann bekomme ich den Zahlungslink?</summary>
+          <p class="faq__a">In der Regel innerhalb von 24 Stunden. Keine E-Mail erhalten? Schau bitte im Spam-Ordner nach oder schreib uns kurz.</p>
+        </details>
+        <details class="faq__item">
+          <summary class="faq__q">Welche Zahlungsarten gibt es?</summary>
+          <p class="faq__a">Im Stripe-Checkout kannst du mit Kredit- oder Debitkarte, Apple Pay und Google Pay bezahlen. Die Rechnung kommt automatisch per E-Mail.</p>
+        </details>
+        <details class="faq__item">
+          <summary class="faq__q">Kann ich den Plan später wechseln oder kündigen?</summary>
+          <p class="faq__a">Ja, jederzeit per E-Mail an uns. Für einen Planwechsel schicken wir dir einen neuen Zahlungslink, die Kündigung gilt zum Ende des laufenden Abrechnungszeitraums.</p>
         </details>
         <details class="faq__item">
           <summary class="faq__q">Nehmt ihr eine Provision auf meine Einnahmen?</summary>
@@ -179,8 +245,8 @@
 
     <section class="cta">
       <h2 class="cta__title">Bereit für deine eigene Community?</h2>
-      <p class="cta__sub">Starte heute – die ersten 14 Tage sind unverbindlich.</p>
-      <a class="cta__btn" href="#preise">Jetzt starten</a>
+      <p class="cta__sub">Plan anfragen, Zahlungslink per E-Mail erhalten, sicher über Stripe bezahlen.</p>
+      <a class="cta__btn" href="#anfrage">Zahlungslink anfordern</a>
     </section>
   </main>
 
@@ -205,6 +271,7 @@
       <div class="footer__col">
         <h3>Hilfe</h3>
         <a href="#faq">FAQ</a>
+        <a href="#anfrage">Plan anfragen</a>
         <a href="#">Support</a>
         <a href="#">Status</a>
       </div>
