@@ -54,7 +54,9 @@ async function stripe(method: "GET" | "POST", path: string, params?: Record<stri
   return data;
 }
 
-async function getPaymentLink(plan: string, billing: "monthly" | "yearly") {
+// Legt für jede Bestellung einen eigenen, einmal nutzbaren Payment Link an,
+// damit jede Zahlung und jedes Abo in Stripe die Bestellnummer trägt.
+async function createPaymentLink(plan: string, billing: "monthly" | "yearly", order: string) {
   const yearly = billing === "yearly";
   const key = `kreisel_${plan.toLowerCase()}_${billing}`;
 
@@ -78,18 +80,16 @@ async function getPaymentLink(plan: string, billing: "monthly" | "yearly") {
     "after_completion[hosted_confirmation][custom_message]":
       "Danke für deine Zahlung! Die Bestätigung kommt per E-Mail.",
   };
-  const links = await stripe("GET", "payment_links?active=true&limit=100");
-  let link = links.data.find((l: { metadata?: Record<string, string> }) => l.metadata?.kreisel_key === key);
-  if (!link) {
-    link = await stripe("POST", "payment_links", {
-      "line_items[0][price]": price.id,
-      "line_items[0][quantity]": "1",
-      "metadata[kreisel_key]": key,
-      ...confirmation,
-    });
-  } else if (link.after_completion?.type !== "hosted_confirmation") {
-    link = await stripe("POST", `payment_links/${link.id}`, confirmation);
-  }
+  const link = await stripe("POST", "payment_links", {
+    "line_items[0][price]": price.id,
+    "line_items[0][quantity]": "1",
+    ...confirmation,
+    "restrictions[completed_sessions][limit]": "1", // Link kann nur einmal bezahlt werden
+    "custom_text[submit][message]": `Bestellnummer: ${order}`,
+    "metadata[order]": order,
+    "subscription_data[description]": order,
+    "subscription_data[metadata][order]": order,
+  });
   return { url: link.url as string, amount: price.unit_amount as number };
 }
 
@@ -136,8 +136,8 @@ Deno.serve(async (req) => {
     if (!PLANS[plan] || !billing) return json({ error: "Ungültiger Plan" }, 400);
     if (!name || !EMAIL_RE.test(email)) return json({ error: "Name oder E-Mail fehlt" }, 400);
 
-    const { url, amount } = await getPaymentLink(plan, billing);
     const order = orderNumber();
+    const { url, amount } = await createPaymentLink(plan, billing, order);
     const params = new URLSearchParams({ prefilled_email: email, client_reference_id: order });
     const payUrl = `${url}?${params}`;
 
