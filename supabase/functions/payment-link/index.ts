@@ -17,8 +17,15 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const DURATION = (yearly: boolean) => (yearly ? "12 Monate" : "1 Monat");
 
-const PRODUCT_NAME = (order: string, plan: string, yearly: boolean) =>
-  `${order} – Community-Plattform ${plan} (${DURATION(yearly)})`;
+const PRODUCT_NAME = (code: string, plan: string, yearly: boolean) =>
+  `${code} – Community-Plattform ${plan} (${DURATION(yearly)})`;
+
+// Produkt-Kürzel wie TOP-6C7ASVRM (ohne verwechselbare Zeichen wie 0/O, 1/I)
+function productCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  return "TOP-" + [...bytes].map((b) => chars[b % chars.length]).join("");
+}
 
 // Bestellnummer wie TP58557337: "TP" + 8 zufällige Ziffern
 function orderNumber() {
@@ -59,12 +66,14 @@ async function stripe(method: "GET" | "POST", path: string, params?: Record<stri
 // damit jede Zahlung in Stripe die Bestellnummer trägt. Einmalzahlung, kein Abo.
 async function createPaymentLink(plan: string, billing: "monthly" | "yearly", order: string) {
   const yearly = billing === "yearly";
-  // Eigenes Produkt pro Bestellung, z. B. "TP58557337 – Community-Plattform Business (12 Monate)"
+  // Eigenes Produkt pro Bestellung, z. B. "TOP-6C7ASVRM – Community-Plattform Business (12 Monate)"
+  const code = productCode();
   const price = await stripe("POST", "prices", {
     currency: "eur",
     unit_amount: String(yearly ? PLANS[plan] * YEARLY_MONTHS : PLANS[plan]),
-    "product_data[name]": PRODUCT_NAME(order, plan, yearly),
+    "product_data[name]": PRODUCT_NAME(code, plan, yearly),
     "product_data[metadata][order]": order,
+    "product_data[metadata][code]": code,
   });
 
   // Nach der Zahlung bleibt der Kunde auf der Stripe-Bestätigungsseite (keine Weiterleitung)
@@ -80,10 +89,12 @@ async function createPaymentLink(plan: string, billing: "monthly" | "yearly", or
     "restrictions[completed_sessions][limit]": "1", // Link kann nur einmal bezahlt werden
     "custom_text[submit][message]": `Bestellnummer: ${order}`,
     "metadata[order]": order,
-    "payment_intent_data[description]": order,
+    "metadata[code]": code,
+    "payment_intent_data[description]": `${order} · ${code}`,
     "payment_intent_data[metadata][order]": order,
+    "payment_intent_data[metadata][code]": code,
   });
-  return { url: link.url as string, amount: price.unit_amount as number };
+  return { url: link.url as string, amount: price.unit_amount as number, code };
 }
 
 async function sendMail(mail: { to: string; subject: string; html: string; replyTo?: string }) {
@@ -130,7 +141,7 @@ Deno.serve(async (req) => {
     if (!name || !EMAIL_RE.test(email)) return json({ error: "Name oder E-Mail fehlt" }, 400);
 
     const order = orderNumber();
-    const { url, amount } = await createPaymentLink(plan, billing, order);
+    const { url, amount, code } = await createPaymentLink(plan, billing, order);
     const params = new URLSearchParams({ prefilled_email: email, client_reference_id: order });
     const payUrl = `${url}?${params}`;
 
@@ -163,6 +174,7 @@ Deno.serve(async (req) => {
           <h1 style="margin:0 0 16px;font-size:20px">Neue Plan-Anfrage</h1>
           <table style="width:100%;border-collapse:collapse;font-size:14px;line-height:1.6">
             <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Bestellnummer</td><td><strong style="font-family:Consolas,monospace">${order}</strong></td></tr>
+            <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Produkt-Kürzel</td><td><strong style="font-family:Consolas,monospace">${code}</strong></td></tr>
             <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Name</td><td>${esc(name)}</td></tr>
             <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">E-Mail</td><td>${esc(email)}</td></tr>
             <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Plan</td><td>${plan} · ${billingText} · ${priceText}</td></tr>
