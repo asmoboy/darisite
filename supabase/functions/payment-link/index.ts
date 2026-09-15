@@ -12,10 +12,18 @@ const YEARLY_MONTHS = 10; // jährlich = 2 Monate gratis
 const SITE_URL = Deno.env.get("SITE_URL") ?? "https://kreiselservices.app";
 const OWNER_EMAIL = Deno.env.get("OWNER_EMAIL") ?? "officekolorao@gmail.com";
 const MAIL_FROM = Deno.env.get("MAIL_FROM") ?? "kreisel <noreply@kreiselservices.app>";
-const SUCCESS_URL = `${SITE_URL}/?bezahlt=1`;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const PRODUCT_NAME = (plan: string, yearly: boolean) =>
+  `Community-Plattform – ${plan} (${yearly ? "jährlich" : "monatlich"})`;
+
+// Bestellnummer wie TOP-6C7ASVRM (ohne verwechselbare Zeichen wie 0/O, 1/I)
+function orderNumber() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  return "TOP-" + [...bytes].map((b) => chars[b % chars.length]).join("");
+}
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -50,20 +58,25 @@ async function getPaymentLink(plan: string, billing: "monthly" | "yearly") {
   const yearly = billing === "yearly";
   const key = `kreisel_${plan.toLowerCase()}_${billing}`;
 
-  let price = (await stripe("GET", `prices?lookup_keys[]=${key}&active=true&limit=1`)).data[0];
+  const productName = PRODUCT_NAME(plan, yearly);
+  let price = (await stripe("GET", `prices?lookup_keys[]=${key}&active=true&limit=1&expand[]=data.product`)).data[0];
   if (!price) {
     price = await stripe("POST", "prices", {
       currency: "eur",
       unit_amount: String(yearly ? PLANS[plan] * YEARLY_MONTHS : PLANS[plan]),
       "recurring[interval]": yearly ? "year" : "month",
       lookup_key: key,
-      "product_data[name]": `kreisel ${plan} (${yearly ? "jährlich" : "monatlich"})`,
+      "product_data[name]": productName,
     });
+  } else if (price.product?.name !== productName) {
+    await stripe("POST", `products/${price.product.id}`, { name: productName });
   }
 
-  const redirect = {
-    "after_completion[type]": "redirect",
-    "after_completion[redirect][url]": SUCCESS_URL,
+  // Nach der Zahlung bleibt der Kunde auf der Stripe-Bestätigungsseite (keine Weiterleitung)
+  const confirmation = {
+    "after_completion[type]": "hosted_confirmation",
+    "after_completion[hosted_confirmation][custom_message]":
+      "Danke für deine Zahlung! Die Bestätigung kommt per E-Mail.",
   };
   const links = await stripe("GET", "payment_links?active=true&limit=100");
   let link = links.data.find((l: { metadata?: Record<string, string> }) => l.metadata?.kreisel_key === key);
@@ -72,10 +85,10 @@ async function getPaymentLink(plan: string, billing: "monthly" | "yearly") {
       "line_items[0][price]": price.id,
       "line_items[0][quantity]": "1",
       "metadata[kreisel_key]": key,
-      ...redirect,
+      ...confirmation,
     });
-  } else if (link.after_completion?.redirect?.url !== SUCCESS_URL) {
-    link = await stripe("POST", `payment_links/${link.id}`, redirect);
+  } else if (link.after_completion?.type !== "hosted_confirmation") {
+    link = await stripe("POST", `payment_links/${link.id}`, confirmation);
   }
   return { url: link.url as string, amount: price.unit_amount as number };
 }
@@ -124,8 +137,8 @@ Deno.serve(async (req) => {
     if (!name || !EMAIL_RE.test(email)) return json({ error: "Name oder E-Mail fehlt" }, 400);
 
     const { url, amount } = await getPaymentLink(plan, billing);
-    const params = new URLSearchParams({ prefilled_email: email });
-    if (UUID_RE.test(body.userId ?? "")) params.set("client_reference_id", body.userId);
+    const order = orderNumber();
+    const params = new URLSearchParams({ prefilled_email: email, client_reference_id: order });
     const payUrl = `${url}?${params}`;
 
     const billingText = billing === "yearly" ? "jährlich (2 Monate gratis)" : "monatlich";
@@ -133,11 +146,12 @@ Deno.serve(async (req) => {
 
     await sendMail({
       to: email,
-      subject: `Dein Zahlungslink für kreisel ${plan}`,
+      subject: `Dein Zahlungslink für ${plan} – Bestellung ${order}`,
       replyTo: OWNER_EMAIL,
       html: layout(`
         <h1 style="margin:0 0 12px;font-size:24px;letter-spacing:-0.03em">Hallo ${esc(name)},</h1>
         <p style="margin:0 0 20px;color:#3f3f3f;line-height:1.6">danke für deine Anfrage! Hier ist dein persönlicher Zahlungslink für den Plan <strong>${plan}</strong> (${billingText}, ${priceText}).</p>
+        <p style="margin:0 0 20px;padding:12px 16px;background:#f8f7f4;border-radius:10px;font-size:14px;color:#3f3f3f">Deine Bestellnummer: <strong style="font-family:Consolas,monospace;color:#111">${order}</strong></p>
         <p style="margin:0 0 24px;text-align:center">
           <a href="${payUrl}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-weight:600;padding:14px 28px;border-radius:999px">Jetzt sicher bezahlen</a>
         </p>
@@ -150,24 +164,24 @@ Deno.serve(async (req) => {
     try {
       await sendMail({
         to: OWNER_EMAIL,
-        subject: `Neue Plan-Anfrage: ${plan} (${billingText}) – ${name}`,
+        subject: `${order} – Neue Plan-Anfrage: ${plan} (${billingText}) – ${name}`,
         replyTo: email,
         html: layout(`
           <h1 style="margin:0 0 16px;font-size:20px">Neue Plan-Anfrage</h1>
           <table style="width:100%;border-collapse:collapse;font-size:14px;line-height:1.6">
+            <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Bestellnummer</td><td><strong style="font-family:Consolas,monospace">${order}</strong></td></tr>
             <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Name</td><td>${esc(name)}</td></tr>
             <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">E-Mail</td><td>${esc(email)}</td></tr>
             <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Plan</td><td>${plan} · ${billingText} · ${priceText}</td></tr>
-            <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Konto</td><td>${params.has("client_reference_id") ? "angemeldet" : "nicht angemeldet"}</td></tr>
             <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0;vertical-align:top">Nachricht</td><td>${message ? esc(message).replace(/\n/g, "<br>") : "–"}</td></tr>
           </table>
-          <p style="margin:16px 0 0;color:#6b6b6b;font-size:13px">Der Zahlungslink wurde automatisch verschickt. Nach der Zahlung wird der Plan automatisch freigeschaltet.</p>`),
+          <p style="margin:16px 0 0;color:#6b6b6b;font-size:13px">Der Zahlungslink wurde automatisch verschickt. In Stripe findest du die Zahlung, indem du nach der Bestellnummer suchst (Feld „Client-Referenz-ID“).</p>`),
       });
     } catch (err) {
       console.error("Benachrichtigung fehlgeschlagen", err);
     }
 
-    return json({ sent: true });
+    return json({ sent: true, order });
   } catch (err) {
     console.error(err);
     return json({ error: "Zahlungslink konnte nicht verschickt werden" }, 500);

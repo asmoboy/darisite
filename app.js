@@ -190,11 +190,10 @@ async function sendRequest({ name, email, plan, billing, message = "" }) {
     body: {
       name, email, plan, message,
       billing: billing.startsWith("Jährlich") ? "yearly" : "monthly",
-      userId: me?.id,
     },
   });
   if (error || !data?.sent) throw error || new Error("Senden fehlgeschlagen");
-  return { link: true };
+  return { link: true, order: data.order };
 }
 
 function mailtoFallback({ name, email, plan, billing, message = "" }) {
@@ -235,7 +234,7 @@ document.querySelectorAll("form[data-request]").forEach((form) => {
     $submit.textContent = "Wird gesendet…";
 
     try {
-      const { link } = await sendRequest(data);
+      const { link, order } = await sendRequest(data);
       form.hidden = true;
       $success.hidden = false;
       $success.innerHTML = `
@@ -244,6 +243,7 @@ document.querySelectorAll("form[data-request]").forEach((form) => {
         <p>Wir haben eine E-Mail an <strong>${escapeHtml(data.email)}</strong> geschickt${link
           ? " – darin findest du deinen Stripe-Zahlungslink für den Plan „" + escapeHtml(data.plan) + "“."
           : ". Deinen persönlichen Stripe-Zahlungslink bekommst du in Kürze."}</p>
+        ${order ? `<p class="request__order">Bestellnummer <strong>${escapeHtml(order)}</strong></p>` : ""}
         <p class="request__small">Keine E-Mail da? Schau bitte auch im Spam-Ordner nach.</p>
         <button class="btn-ghost" type="button" data-request-again>Weitere Anfrage senden</button>`;
     } catch {
@@ -672,25 +672,6 @@ document.querySelectorAll("dialog").forEach((d) =>
     if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) d.close();
   })
 );
-
-// Rückkehr vom Stripe-Checkout (?bezahlt=1)
-if (new URLSearchParams(location.search).has("bezahlt")) {
-  history.replaceState(null, "", location.pathname + location.hash);
-  const toast = document.createElement("div");
-  toast.className = "toast";
-  toast.setAttribute("role", "status");
-  toast.innerHTML = `
-    <div class="request__check" aria-hidden="true">✓</div>
-    <div>
-      <strong>Zahlung erfolgreich – danke!</strong>
-      <p>Dein Plan wird in wenigen Sekunden freigeschaltet. Du siehst ihn im Konto-Menü, sobald du mit derselben E-Mail angemeldet bist.</p>
-    </div>
-    <button class="toast__close" type="button" aria-label="Schließen">×</button>`;
-  toast.querySelector("button").addEventListener("click", () => toast.remove());
-  document.body.append(toast);
-  // Webhook braucht einen Moment – Plan-Status danach neu laden
-  setTimeout(async () => { if (sb) loadMe((await sb.auth.getSession()).data.session); }, 5000);
-}
 
 renderAccount();
 openFromHash();
