@@ -182,45 +182,19 @@ renderFilters();
 render();
 
 // ---------- Plan-Anfrage (Zahlungslink per E-Mail) ----------
-// Die Anfrage wird über FormSubmit (formsubmit.co) an CONTACT_EMAIL geschickt.
-// Gleichzeitig bekommt der Kunde eine automatische Antwort-Mail – mit dem
-// Stripe-Zahlungslink, den die Supabase Edge Function "payment-link" erzeugt.
+// Die Supabase Edge Function "payment-link" erstellt den Stripe-Zahlungslink und
+// schickt ihn per E-Mail an den Kunden (und eine Benachrichtigung an CONTACT_EMAIL).
 async function sendRequest({ name, email, plan, billing, message = "" }) {
-  let link = null;
-  try {
-    const { data, error } = await sb.functions.invoke("payment-link", {
-      body: { plan, billing: billing.startsWith("Jährlich") ? "yearly" : "monthly" },
-    });
-    if (!error && data?.url) {
-      // E-Mail vorausfüllen und Konto-ID mitgeben, damit der Webhook die Zahlung dem Konto zuordnet
-      const params = new URLSearchParams({ prefilled_email: email });
-      if (me?.id) params.set("client_reference_id", me.id);
-      link = `${data.url}?${params}`;
-    }
-  } catch {}
-  const autoresponse = link
-    ? `Hallo ${name},\n\ndanke für deine Anfrage! Hier ist dein Zahlungslink für den Plan „${plan}“ (${billing}):\n\n${link}\n\nÜber den Link bezahlst du sicher im Stripe-Checkout. Direkt nach der Zahlung wird dein Plan automatisch freigeschaltet – du siehst ihn in deinem kreisel-Konto mit dieser E-Mail-Adresse.\n\nViele Grüße\ndein kreisel-Team`
-    : `Hallo ${name},\n\ndanke für deine Anfrage für den Plan „${plan}“ (${billing}). Wir schicken dir in Kürze deinen persönlichen Stripe-Zahlungslink per E-Mail.\n\nViele Grüße\ndein kreisel-Team`;
-
-  const res = await fetch(`https://formsubmit.co/ajax/${CONTACT_EMAIL}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({
-      _subject: `Plan-Anfrage: ${plan} (${billing}) – ${name}`,
-      _template: "table",
-      _captcha: "false",
-      _autoresponse: autoresponse,
-      Name: name,
-      email,
-      Plan: plan,
-      Abrechnung: billing,
-      Nachricht: message || "–",
-      Zahlungslink: link ? `automatisch gesendet: ${link}` : "NICHT automatisch gesendet – bitte manuell schicken",
-    }),
+  if (!sb) throw new Error("Supabase nicht verfügbar");
+  const { data, error } = await sb.functions.invoke("payment-link", {
+    body: {
+      name, email, plan, message,
+      billing: billing.startsWith("Jährlich") ? "yearly" : "monthly",
+      userId: me?.id,
+    },
   });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok || String(json.success) !== "true") throw new Error(json.message || "Senden fehlgeschlagen");
-  return { link };
+  if (error || !data?.sent) throw error || new Error("Senden fehlgeschlagen");
+  return { link: true };
 }
 
 function mailtoFallback({ name, email, plan, billing, message = "" }) {
@@ -698,6 +672,25 @@ document.querySelectorAll("dialog").forEach((d) =>
     if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) d.close();
   })
 );
+
+// Rückkehr vom Stripe-Checkout (?bezahlt=1)
+if (new URLSearchParams(location.search).has("bezahlt")) {
+  history.replaceState(null, "", location.pathname + location.hash);
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.setAttribute("role", "status");
+  toast.innerHTML = `
+    <div class="request__check" aria-hidden="true">✓</div>
+    <div>
+      <strong>Zahlung erfolgreich – danke!</strong>
+      <p>Dein Plan wird in wenigen Sekunden freigeschaltet. Du siehst ihn im Konto-Menü, sobald du mit derselben E-Mail angemeldet bist.</p>
+    </div>
+    <button class="toast__close" type="button" aria-label="Schließen">×</button>`;
+  toast.querySelector("button").addEventListener("click", () => toast.remove());
+  document.body.append(toast);
+  // Webhook braucht einen Moment – Plan-Status danach neu laden
+  setTimeout(async () => { if (sb) loadMe((await sb.auth.getSession()).data.session); }, 5000);
+}
 
 renderAccount();
 openFromHash();

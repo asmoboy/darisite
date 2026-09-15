@@ -539,6 +539,18 @@ button { font: inherit; color: inherit; }
 }
 .btn-ghost:hover { border-color: var(--text); }
 
+/* ---------- Hinweis nach Zahlung ---------- */
+.toast {
+  position: fixed; left: 50%; bottom: 24px; z-index: 50; transform: translateX(-50%);
+  width: min(460px, calc(100% - 32px)); display: flex; gap: 14px; align-items: flex-start;
+  padding: 16px 18px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow-hover);
+}
+.toast .request__check { width: 36px; height: 36px; flex-shrink: 0; font-size: 18px; }
+.toast strong { display: block; margin-bottom: 2px; }
+.toast p { margin: 0; color: var(--muted); font-size: 14px; }
+.toast__close { margin-left: auto; border: 0; background: none; cursor: pointer; font-size: 20px; line-height: 1; color: var(--faint); }
+
 /* ---------- Unterseiten ---------- */
 .doc { max-width: 760px; margin: 0 auto; padding: 64px 0 24px; }
 .doc__back { display: inline-block; margin-bottom: 20px; color: var(--muted); font-size: 14px; }
