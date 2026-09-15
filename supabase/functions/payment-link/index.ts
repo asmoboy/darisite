@@ -15,8 +15,8 @@ const MAIL_FROM = Deno.env.get("MAIL_FROM") ?? "kreisel <noreply@kreiselservices
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const PRODUCT_NAME = (plan: string, yearly: boolean) =>
-  `Community-Plattform – ${plan} (${yearly ? "jährlich" : "monatlich"})`;
+const PRODUCT_NAME = (order: string, plan: string, yearly: boolean) =>
+  `${order} – Community-Plattform ${plan} (${yearly ? "jährlich" : "monatlich"})`;
 
 // Bestellnummer wie TOP-6C7ASVRM (ohne verwechselbare Zeichen wie 0/O, 1/I)
 function orderNumber() {
@@ -58,21 +58,14 @@ async function stripe(method: "GET" | "POST", path: string, params?: Record<stri
 // damit jede Zahlung und jedes Abo in Stripe die Bestellnummer trägt.
 async function createPaymentLink(plan: string, billing: "monthly" | "yearly", order: string) {
   const yearly = billing === "yearly";
-  const key = `kreisel_${plan.toLowerCase()}_${billing}`;
-
-  const productName = PRODUCT_NAME(plan, yearly);
-  let price = (await stripe("GET", `prices?lookup_keys[]=${key}&active=true&limit=1&expand[]=data.product`)).data[0];
-  if (!price) {
-    price = await stripe("POST", "prices", {
-      currency: "eur",
-      unit_amount: String(yearly ? PLANS[plan] * YEARLY_MONTHS : PLANS[plan]),
-      "recurring[interval]": yearly ? "year" : "month",
-      lookup_key: key,
-      "product_data[name]": productName,
-    });
-  } else if (price.product?.name !== productName) {
-    await stripe("POST", `products/${price.product.id}`, { name: productName });
-  }
+  // Eigenes Produkt pro Bestellung, z. B. "TOP-Q6JN9STC – Community-Plattform Business (jährlich)"
+  const price = await stripe("POST", "prices", {
+    currency: "eur",
+    unit_amount: String(yearly ? PLANS[plan] * YEARLY_MONTHS : PLANS[plan]),
+    "recurring[interval]": yearly ? "year" : "month",
+    "product_data[name]": PRODUCT_NAME(order, plan, yearly),
+    "product_data[metadata][order]": order,
+  });
 
   // Nach der Zahlung bleibt der Kunde auf der Stripe-Bestätigungsseite (keine Weiterleitung)
   const confirmation = {
