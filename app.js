@@ -102,7 +102,7 @@ function cardHtml(c, rank) {
         <h2 class="card__name">${escapeHtml(c.name)}</h2>
       </div>
       <p class="card__desc">${escapeHtml(c.desc)}</p>
-      <p class="card__meta">${fmtMembers(c.members)} Mitglieder<span class="sep">•</span>${c.price}</p>
+      <p class="card__meta"><span class="card__example">Beispiel</span>${fmtMembers(c.members)} Mitglieder<span class="sep">•</span>${c.price}</p>
     </div>
   </a>`;
 }
@@ -582,6 +582,7 @@ function renderCommunity(c) {
           <p class="community__meta">${CAT_LABEL[c.category]} · ${c.members.toLocaleString("de-DE")} Mitglieder · ${c.price}</p>
         </div>
       </div>
+      <p class="community__example">Beispiel-Community: Sie zeigt, wie eine Community auf kreisel aussehen kann. Name, Inhalte und Mitgliederzahl sind frei erfunden.</p>
       <p class="community__desc">${escapeHtml(c.desc)}</p>
       <ul class="plan__features">
         <li>Feed mit Diskussionen und Fragen</li>
