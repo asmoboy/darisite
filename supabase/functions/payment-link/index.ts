@@ -1,13 +1,13 @@
 // Supabase Edge Function: erstellt den Stripe-Zahlungslink für einen Plan und
 // schickt ihn per E-Mail (Resend) an den Kunden – plus Benachrichtigung an dich.
-// Preis und Payment Link werden beim ersten Aufruf in Stripe angelegt und danach wiederverwendet.
+// Für jede Bestellung werden Produkt, Preis und ein einmal nutzbarer Payment Link (Einmalzahlung) angelegt.
 //
 // Secrets: STRIPE_SECRET_KEY, RESEND_API_KEY
 // Optional: OWNER_EMAIL (Standard officekolorao@gmail.com), SITE_URL (Standard https://kreiselservices.app),
 //           MAIL_FROM (Standard "kreisel <noreply@kreiselservices.app>")
 
 const PLANS: Record<string, number> = { Starter: 3490, Pro: 8900, Business: 24000 }; // Cent pro Monat
-const YEARLY_MONTHS = 10; // jährlich = 2 Monate gratis
+const YEARLY_MONTHS = 10; // 12 Monate Laufzeit = 2 Monate gratis
 
 const SITE_URL = Deno.env.get("SITE_URL") ?? "https://kreiselservices.app";
 const OWNER_EMAIL = Deno.env.get("OWNER_EMAIL") ?? "officekolorao@gmail.com";
@@ -15,14 +15,15 @@ const MAIL_FROM = Deno.env.get("MAIL_FROM") ?? "kreisel <noreply@kreiselservices
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const PRODUCT_NAME = (order: string, plan: string, yearly: boolean) =>
-  `${order} – Community-Plattform ${plan} (${yearly ? "jährlich" : "monatlich"})`;
+const DURATION = (yearly: boolean) => (yearly ? "12 Monate" : "1 Monat");
 
-// Bestellnummer wie TOP-6C7ASVRM (ohne verwechselbare Zeichen wie 0/O, 1/I)
+const PRODUCT_NAME = (order: string, plan: string, yearly: boolean) =>
+  `${order} – Community-Plattform ${plan} (${DURATION(yearly)})`;
+
+// Bestellnummer wie TP58557337: "TP" + 8 zufällige Ziffern
 function orderNumber() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const bytes = crypto.getRandomValues(new Uint8Array(8));
-  return "TOP-" + [...bytes].map((b) => chars[b % chars.length]).join("");
+  const bytes = crypto.getRandomValues(new Uint32Array(8));
+  return "TP" + [...bytes].map((n) => n % 10).join("");
 }
 
 const cors = {
@@ -55,14 +56,13 @@ async function stripe(method: "GET" | "POST", path: string, params?: Record<stri
 }
 
 // Legt für jede Bestellung einen eigenen, einmal nutzbaren Payment Link an,
-// damit jede Zahlung und jedes Abo in Stripe die Bestellnummer trägt.
+// damit jede Zahlung in Stripe die Bestellnummer trägt. Einmalzahlung, kein Abo.
 async function createPaymentLink(plan: string, billing: "monthly" | "yearly", order: string) {
   const yearly = billing === "yearly";
-  // Eigenes Produkt pro Bestellung, z. B. "TOP-Q6JN9STC – Community-Plattform Business (jährlich)"
+  // Eigenes Produkt pro Bestellung, z. B. "TP58557337 – Community-Plattform Business (12 Monate)"
   const price = await stripe("POST", "prices", {
     currency: "eur",
     unit_amount: String(yearly ? PLANS[plan] * YEARLY_MONTHS : PLANS[plan]),
-    "recurring[interval]": yearly ? "year" : "month",
     "product_data[name]": PRODUCT_NAME(order, plan, yearly),
     "product_data[metadata][order]": order,
   });
@@ -80,8 +80,8 @@ async function createPaymentLink(plan: string, billing: "monthly" | "yearly", or
     "restrictions[completed_sessions][limit]": "1", // Link kann nur einmal bezahlt werden
     "custom_text[submit][message]": `Bestellnummer: ${order}`,
     "metadata[order]": order,
-    "subscription_data[description]": order,
-    "subscription_data[metadata][order]": order,
+    "payment_intent_data[description]": order,
+    "payment_intent_data[metadata][order]": order,
   });
   return { url: link.url as string, amount: price.unit_amount as number };
 }
@@ -134,8 +134,8 @@ Deno.serve(async (req) => {
     const params = new URLSearchParams({ prefilled_email: email, client_reference_id: order });
     const payUrl = `${url}?${params}`;
 
-    const billingText = billing === "yearly" ? "jährlich (2 Monate gratis)" : "monatlich";
-    const priceText = `${euro(amount)} ${billing === "yearly" ? "pro Jahr" : "pro Monat"}`;
+    const billingText = billing === "yearly" ? "12 Monate, 2 Monate gratis" : "1 Monat";
+    const priceText = `einmalig ${euro(amount)}`;
 
     await sendMail({
       to: email,
@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
         <p style="margin:0 0 24px;text-align:center">
           <a href="${payUrl}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-weight:600;padding:14px 28px;border-radius:999px">Jetzt sicher bezahlen</a>
         </p>
-        <p style="margin:0 0 12px;color:#3f3f3f;line-height:1.6">Du bezahlst im offiziellen Stripe-Checkout per Karte, Apple Pay oder Google Pay. Direkt nach der Zahlung wird dein Plan automatisch freigeschaltet – du siehst ihn in deinem kreisel-Konto mit dieser E-Mail-Adresse.</p>
+        <p style="margin:0 0 12px;color:#3f3f3f;line-height:1.6">Du bezahlst im offiziellen Stripe-Checkout per Karte, Apple Pay oder Google Pay. Es ist eine Einmalzahlung – kein Abo, keine automatische Verlängerung. Nach der Zahlung schalten wir deinen Zugang frei und melden uns bei dir.</p>
         <p style="margin:0 0 20px;color:#6b6b6b;font-size:13px;line-height:1.6">Falls der Button nicht funktioniert, kopiere diesen Link in deinen Browser:<br><a href="${payUrl}" style="color:#2563eb;word-break:break-all">${payUrl}</a></p>
         <p style="margin:0;color:#3f3f3f">Viele Grüße<br>dein kreisel-Team</p>`),
     });
