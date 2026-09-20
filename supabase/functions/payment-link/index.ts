@@ -76,16 +76,19 @@ async function createPaymentLink(plan: string, billing: "monthly" | "yearly", or
     "product_data[metadata][code]": code,
   });
 
-  // Nach der Zahlung bleibt der Kunde auf der Stripe-Bestätigungsseite (keine Weiterleitung)
-  const confirmation = {
+  const link = await linkForPrice(price.id, order, code);
+  return { url: link, amount: price.unit_amount as number, code };
+}
+
+// Einmal nutzbarer Zahlungslink zu einem Preis. Nach der Zahlung bleibt der Kunde
+// auf der Stripe-Bestätigungsseite (keine Weiterleitung).
+async function linkForPrice(priceId: string, order: string, code: string) {
+  const link = await stripe("POST", "payment_links", {
+    "line_items[0][price]": priceId,
+    "line_items[0][quantity]": "1",
     "after_completion[type]": "hosted_confirmation",
     "after_completion[hosted_confirmation][custom_message]":
       "Danke für deine Zahlung! Die Bestätigung kommt per E-Mail.",
-  };
-  const link = await stripe("POST", "payment_links", {
-    "line_items[0][price]": price.id,
-    "line_items[0][quantity]": "1",
-    ...confirmation,
     "restrictions[completed_sessions][limit]": "1", // Link kann nur einmal bezahlt werden
     "custom_text[submit][message]": `Bestellnummer: ${order}`,
     "metadata[order]": order,
@@ -94,7 +97,20 @@ async function createPaymentLink(plan: string, billing: "monthly" | "yearly", or
     "payment_intent_data[metadata][order]": order,
     "payment_intent_data[metadata][code]": code,
   });
-  return { url: link.url as string, amount: price.unit_amount as number, code };
+  return link.url as string;
+}
+
+// Prüft, ob die Anfrage von einem angemeldeten Betreiber-Konto kommt.
+async function isAdmin(authHeader: string) {
+  const token = authHeader.replace(/^Bearer\s+/i, "");
+  if (!token) return false;
+  const res = await fetch(`${Deno.env.get("SUPABASE_URL")}/auth/v1/user`, {
+    headers: { Authorization: `Bearer ${token}`, apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "" },
+  });
+  if (!res.ok) return false;
+  const user = await res.json();
+  const admins = (Deno.env.get("ADMIN_EMAILS") ?? OWNER_EMAIL).split(",").map((e) => e.trim().toLowerCase());
+  return admins.includes(String(user.email ?? "").toLowerCase());
 }
 
 async function sendMail(mail: { to: string; subject: string; html: string; replyTo?: string }) {
@@ -139,6 +155,71 @@ Deno.serve(async (req) => {
     const isService = body.kind === "service";
 
     if (!name || !EMAIL_RE.test(email)) return json({ error: "Name oder E-Mail fehlt" }, 400);
+
+    // Angebot: nur für angemeldete Betreiber – freier Betrag und freie Beschreibung
+    if (body.kind === "offer") {
+      if (!(await isAdmin(req.headers.get("authorization") ?? ""))) {
+        return json({ error: "Nicht berechtigt" }, 403);
+      }
+      const description = String(body.description ?? "").trim().slice(0, 120);
+      const amount = Math.round(Number(body.amount) * 100);
+      const reference = String(body.reference ?? "").trim().slice(0, 40).toUpperCase();
+      if (!description) return json({ error: "Beschreibung fehlt" }, 400);
+      if (!Number.isFinite(amount) || amount < 100 || amount > 5_000_000) {
+        return json({ error: "Betrag muss zwischen 1 € und 50.000 € liegen" }, 400);
+      }
+
+      const order = /^T[PO]/.test(reference) ? reference : orderNumber();
+      const code = productCode();
+      const price = await stripe("POST", "prices", {
+        currency: "eur",
+        unit_amount: String(amount),
+        "product_data[name]": `${code} – ${description}`,
+        "product_data[metadata][order]": order,
+        "product_data[metadata][code]": code,
+      });
+      const params = new URLSearchParams({ prefilled_email: email, client_reference_id: order });
+      const payUrl = `${await linkForPrice(price.id, order, code)}?${params}`;
+
+      await sendMail({
+        to: email,
+        subject: `Dein Angebot von kreisel – ${order}`,
+        replyTo: OWNER_EMAIL,
+        html: layout(`
+          <h1 style="margin:0 0 12px;font-size:24px;letter-spacing:-0.03em">Hallo ${esc(name)},</h1>
+          <p style="margin:0 0 20px;color:#3f3f3f;line-height:1.6">hier ist dein Angebot: <strong>${esc(description)}</strong> zum Festpreis von <strong>${euro(amount)}</strong> (inkl. MwSt.).</p>
+          <p style="margin:0 0 20px;padding:12px 16px;background:#f8f7f4;border-radius:10px;font-size:14px;color:#3f3f3f">Bestellnummer: <strong style="font-family:Consolas,monospace;color:#111">${order}</strong></p>
+          ${message ? `<p style="margin:0 0 20px;color:#3f3f3f;line-height:1.6">${esc(message).replace(/\n/g, "<br>")}</p>` : ""}
+          <p style="margin:0 0 24px;text-align:center">
+            <a href="${payUrl}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-weight:600;padding:14px 28px;border-radius:999px">Angebot annehmen &amp; bezahlen</a>
+          </p>
+          <p style="margin:0 0 12px;color:#3f3f3f;line-height:1.6">Du bezahlst im offiziellen Stripe-Checkout per Karte, Apple Pay oder Google Pay. Es ist eine Einmalzahlung – kein Abo.</p>
+          <p style="margin:0 0 20px;color:#6b6b6b;font-size:13px;line-height:1.6">Falls der Button nicht funktioniert, kopiere diesen Link in deinen Browser:<br><a href="${payUrl}" style="color:#2563eb;word-break:break-all">${payUrl}</a></p>
+          <p style="margin:0;color:#3f3f3f">Viele Grüße<br>dein kreisel-Team</p>`),
+      });
+
+      try {
+        await sendMail({
+          to: OWNER_EMAIL,
+          subject: `${order} – Angebot verschickt: ${description} (${euro(amount)}) – ${name}`,
+          replyTo: email,
+          html: layout(`
+            <h1 style="margin:0 0 16px;font-size:20px">Angebot verschickt</h1>
+            <table style="width:100%;border-collapse:collapse;font-size:14px;line-height:1.6">
+              <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Bestellnummer</td><td><strong style="font-family:Consolas,monospace">${order}</strong></td></tr>
+              <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Produkt-Kürzel</td><td><strong style="font-family:Consolas,monospace">${code}</strong></td></tr>
+              <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Kunde</td><td>${esc(name)} (${esc(email)})</td></tr>
+              <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Leistung</td><td>${esc(description)}</td></tr>
+              <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Betrag</td><td>${euro(amount)}</td></tr>
+            </table>
+            <p style="margin:16px 0 0;font-size:13px"><a href="${payUrl}" style="color:#2563eb;word-break:break-all">${payUrl}</a></p>`),
+        });
+      } catch (err) {
+        console.error("Benachrichtigung fehlgeschlagen", err);
+      }
+
+      return json({ sent: true, order, code, url: payUrl });
+    }
 
     // Individuelles Service-Paket: nur Anfrage, Angebot und Zahlungslink folgen manuell
     if (isService) {

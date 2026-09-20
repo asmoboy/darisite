@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Angebot erstellen – kreisel</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header__inner">
+      <a class="brand" href="index.html" aria-label="kreisel – zur Startseite">
+        <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg-head" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg-head)"/><g class="logo__spin"><circle cx="16" cy="16" r="8.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="38 15.4"/><circle cx="21.2" cy="9.3" r="1.7" fill="#fff"/></g><circle cx="16" cy="16" r="2.8" fill="#fff"/></svg>
+        <span class="brand__word">kreisel</span>
+      </a>
+      <div class="header__actions">
+        <span class="admin__who" id="who" hidden></span>
+        <button class="btn-outline" type="button" id="logout" hidden>Abmelden</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page" id="main">
+    <article class="doc">
+      <a class="doc__back" href="index.html">← Zur Startseite</a>
+      <h1>Angebot erstellen</h1>
+      <p class="doc__lead">Nur für den internen Gebrauch: Betrag eintragen, Angebot verschicken. Der Kunde bekommt eine E-Mail mit Zahlungslink.</p>
+
+      <!-- Anmeldung -->
+      <div class="doc__card" id="login-card" hidden>
+        <h2>Anmelden</h2>
+        <form class="request__fields" id="login-form" novalidate>
+          <div class="field">
+            <label for="ad-email">E-Mail-Adresse</label>
+            <input id="ad-email" name="email" type="email" autocomplete="email">
+          </div>
+          <div class="field">
+            <label for="ad-pw">Passwort</label>
+            <input id="ad-pw" name="password" type="password" autocomplete="current-password">
+          </div>
+          <p class="request__error" id="login-error" role="alert" hidden></p>
+          <button class="request__submit" type="submit">Anmelden</button>
+        </form>
+      </div>
+
+      <!-- Angebot -->
+      <div class="doc__card" id="offer-card" hidden>
+        <h2>Neues Angebot</h2>
+        <form class="request__fields" id="offer-form" novalidate>
+          <div class="field">
+            <label for="of-name">Name des Kunden</label>
+            <input id="of-name" name="name" type="text" required>
+          </div>
+          <div class="field">
+            <label for="of-email">E-Mail des Kunden</label>
+            <input id="of-email" name="email" type="email" required>
+          </div>
+          <div class="field">
+            <label for="of-desc">Leistung</label>
+            <input id="of-desc" name="description" type="text" placeholder="z. B. Social-Media-Betreuung 3 Monate" required>
+            <small>Steht so im Checkout und auf der Rechnung, hinter dem Produkt-Kürzel.</small>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="of-amount">Betrag in € (inkl. MwSt.)</label>
+              <input id="of-amount" name="amount" type="number" min="1" max="50000" step="0.01" required>
+            </div>
+            <div class="field">
+              <label for="of-ref">Anfragenummer <span class="field__opt">(optional)</span></label>
+              <input id="of-ref" name="reference" type="text" placeholder="TP12345678">
+              <small>Leer lassen für eine neue Nummer.</small>
+            </div>
+          </div>
+          <div class="field">
+            <label for="of-msg">Nachricht an den Kunden <span class="field__opt">(optional)</span></label>
+            <textarea id="of-msg" name="message" rows="3"></textarea>
+          </div>
+          <p class="request__error" id="offer-error" role="alert" hidden></p>
+          <button class="request__submit" type="submit">Angebot mit Zahlungslink senden</button>
+        </form>
+        <div class="request__success" id="offer-success" hidden></div>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__bar">
+      <p>© 2026 kreisel</p>
+      <nav class="footer__legal" aria-label="Rechtliches">
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+        <a href="agb.html">AGB</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

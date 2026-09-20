@@ -228,6 +228,10 @@ button { font: inherit; color: inherit; }
   background: #fff; color: #1d4ed8; cursor: pointer; font: inherit; font-size: 15px; font-weight: 700;
 }
 .package__btn:hover { background: #eef2ff; }
+.admin__who { color: var(--muted); font-size: 14px; }
+.doc__card .request__fields { margin-top: 16px; }
+.doc__card .request__success { padding: 8px 0; }
+
 .checks { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; }
 .checks legend { padding: 0; margin-bottom: 8px; font-size: 14px; font-weight: 600; }
 .check {
