@@ -3,174 +3,217 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>kreisel – Communities entdecken</title>
-  <meta name="description" content="Entdecke Communities zu Business, Fitness, Kreativem und mehr – oder erstelle deine eigene. Plan anfragen, Zahlungslink per E-Mail erhalten und sicher über Stripe bezahlen.">
+  <title data-i18n="meta.title">kreisel – Communities &amp; Services</title>
+  <meta name="description" content="Eigene Community aufbauen und Services wie Social-Media-Marketing, Webdesign und Google SEO als individuelles Paket buchen.">
   <link rel="icon" href="logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">Zum Inhalt springen</a>
+  <a class="skip-link" href="#main" data-i18n="skip">Zum Inhalt springen</a>
 
   <header class="header">
     <div class="header__inner">
-      <a class="brand" href="index.html" aria-label="kreisel – zur Startseite">
+      <a class="brand" href="index.html" data-i18n-aria="brand.home" aria-label="kreisel – zur Startseite">
         <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg-head" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg-head)"/><g class="logo__spin"><circle cx="16" cy="16" r="8.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="38 15.4"/><circle cx="21.2" cy="9.3" r="1.7" fill="#fff"/></g><circle cx="16" cy="16" r="2.8" fill="#fff"/></svg>
         <span class="brand__word">kreisel</span>
       </a>
 
-      <nav class="header__nav" aria-label="Hauptnavigation">
-        <a href="#entdecken">Entdecken</a>
-        <a href="#ablauf">Ablauf</a>
-        <a href="#preise">Preise</a>
-        <a href="#faq">FAQ</a>
+      <nav class="header__nav" aria-label="Navigation">
+        <a href="#entdecken" data-i18n="nav.discover">Entdecken</a>
+        <a href="#services" data-i18n="nav.services">Services</a>
+        <a href="#ablauf" data-i18n="nav.flow">Ablauf</a>
+        <a href="#preise" data-i18n="nav.prices">Preise</a>
+        <a href="#faq" data-i18n="nav.faq">FAQ</a>
       </nav>
 
       <div class="header__actions">
-        <a class="btn-solid" href="#anfrage">Plan anfragen</a>
-        <button class="icon-btn" type="button" aria-label="Sprache wählen" popovertarget="lang-menu">
+        <a class="btn-solid" href="#anfrage" data-i18n="nav.request">Plan anfragen</a>
+        <button class="icon-btn" type="button" popovertarget="lang-menu" data-i18n-aria="nav.lang" aria-label="Sprache wählen">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
         </button>
-        <button class="btn-outline" type="button" id="login-btn">Anmelden</button>
-        <button class="account" type="button" id="account-btn" popovertarget="account-menu" aria-label="Konto-Menü" hidden></button>
+        <button class="btn-outline" type="button" id="login-btn" data-i18n="nav.login">Anmelden</button>
+        <button class="account" type="button" id="account-btn" popovertarget="account-menu" data-i18n-aria="nav.account" aria-label="Konto-Menü" hidden></button>
       </div>
     </div>
   </header>
 
   <main class="page" id="main">
     <section class="hero">
-      <h1 class="hero__title">Finde deine Community</h1>
-      <p class="hero__sub">Lerne mit Menschen, die dasselbe wollen wie du – <a href="#preise">oder erstelle deine eigene</a></p>
+      <h1 class="hero__title" data-i18n="hero.title">Finde deine Community</h1>
+      <p class="hero__sub" data-i18n-html="hero.sub">Lerne mit Menschen, die dasselbe wollen wie du – <a href="#preise">oder erstelle deine eigene</a></p>
 
       <label class="search">
         <svg class="search__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <span class="sr-only">Communities durchsuchen</span>
-        <input id="search" type="search" placeholder="Nach allem suchen" autocomplete="off">
+        <span class="sr-only" data-i18n="hero.searchLabel">Communities durchsuchen</span>
+        <input id="search" type="search" data-i18n-ph="hero.search" placeholder="Nach allem suchen" autocomplete="off">
       </label>
-
     </section>
 
     <nav class="filters" id="entdecken" aria-label="Kategorien">
       <div class="filters__scroll" id="filters" role="tablist"></div>
       <div class="filters__end">
-        <button class="pill" type="button" popovertarget="more-menu">Mehr…</button>
+        <button class="pill" type="button" popovertarget="more-menu" data-i18n="filters.more">Mehr…</button>
         <button class="pill pill--icon" type="button" popovertarget="filter-menu">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-          Filter<span class="pill__count" id="filter-count" hidden></span>
+          <span data-i18n="filters.filter">Filter</span><span class="pill__count" id="filter-count" hidden></span>
         </button>
       </div>
     </nav>
 
-    <p class="examples-note">
-      <span class="examples-note__tag">Beispiele</span>
-      Die folgenden Communities sind Beispiele, die zeigen, wie Communities auf kreisel aussehen können. Namen, Inhalte und Mitgliederzahlen sind frei erfunden.
-    </p>
-
     <section class="grid" id="grid" aria-live="polite"></section>
-    <p class="empty" id="empty" hidden>Keine Communities gefunden. Probier einen anderen Suchbegriff.</p>
+    <p class="empty" id="empty" data-i18n="grid.empty" hidden>Keine Communities gefunden. Probier einen anderen Suchbegriff.</p>
 
     <nav class="pagination" id="pagination" aria-label="Seiten"></nav>
 
+    <section class="section" id="services">
+      <div class="section__head">
+        <h2 class="section__title" data-i18n="services.title">Services für dein Online-Business</h2>
+        <p class="section__sub" data-i18n="services.sub">Wir übernehmen die Arbeit rund um deine Community und deine Marke – einzeln oder als individuelles Paket.</p>
+      </div>
+
+      <div class="services">
+        <article class="service">
+          <span class="service__icon" aria-hidden="true">📱</span>
+          <h3 class="service__title" data-i18n="services.smm.title">Social-Media-Marketing</h3>
+          <p class="service__text" data-i18n="services.smm.text">Redaktionsplan, Beiträge und Betreuung für Instagram, TikTok und LinkedIn.</p>
+        </article>
+        <article class="service">
+          <span class="service__icon" aria-hidden="true">🖥️</span>
+          <h3 class="service__title" data-i18n="services.web.title">Webdesign</h3>
+          <p class="service__text" data-i18n="services.web.text">Landingpages und Websites, die schnell laden und aus Besuchern Kunden machen.</p>
+        </article>
+        <article class="service">
+          <span class="service__icon" aria-hidden="true">🔍</span>
+          <h3 class="service__title" data-i18n="services.seo.title">Google SEO</h3>
+          <p class="service__text" data-i18n="services.seo.text">Technische Optimierung, Inhalte und lokale Sichtbarkeit für bessere Platzierungen.</p>
+        </article>
+        <article class="service">
+          <span class="service__icon" aria-hidden="true">📣</span>
+          <h3 class="service__title" data-i18n="services.ads.title">Werbeanzeigen</h3>
+          <p class="service__text" data-i18n="services.ads.text">Kampagnen auf Meta und Google – aufgesetzt, betreut und regelmäßig ausgewertet.</p>
+        </article>
+        <article class="service">
+          <span class="service__icon" aria-hidden="true">🎬</span>
+          <h3 class="service__title" data-i18n="services.content.title">Content &amp; Video</h3>
+          <p class="service__text" data-i18n="services.content.text">Fotos, Reels und Schnitt für Social Media, Kurse und deine Community.</p>
+        </article>
+        <article class="service">
+          <span class="service__icon" aria-hidden="true">🎨</span>
+          <h3 class="service__title" data-i18n="services.brand.title">Branding &amp; Grafik</h3>
+          <p class="service__text" data-i18n="services.brand.text">Logo, Farben und Vorlagen, damit dein Auftritt überall gleich aussieht.</p>
+        </article>
+      </div>
+
+      <div class="package">
+        <div>
+          <h3 class="package__title" data-i18n="services.cta.title">Individuelles Service-Paket</h3>
+          <p class="package__text" data-i18n="services.cta.text">Stell dir dein Paket aus mehreren Leistungen zusammen. Du bekommst ein Angebot zum Festpreis und deinen Zahlungslink per E-Mail.</p>
+        </div>
+        <button class="package__btn" type="button" id="package-btn" data-i18n="services.cta.btn">Individuelles Paket anfragen</button>
+      </div>
+    </section>
+
     <section class="section" id="ablauf">
       <div class="section__head">
-        <h2 class="section__title">So kommst du zu deiner Community</h2>
-        <p class="section__sub">Kein Konto anlegen, keine Zahlungsdaten auf dieser Seite. Du bekommst einen persönlichen Zahlungslink und bezahlst direkt bei Stripe.</p>
+        <h2 class="section__title" data-i18n="flow.title">So kommst du zu deiner Community</h2>
+        <p class="section__sub" data-i18n="flow.sub">Kein Konto anlegen, keine Zahlungsdaten auf dieser Seite. Du bekommst einen persönlichen Zahlungslink und bezahlst direkt bei Stripe.</p>
       </div>
       <ol class="steps">
         <li class="step">
           <span class="step__num">1</span>
-          <h3 class="step__title">Plan anfragen</h3>
-          <p class="step__text">Wähle deinen Plan und schick uns deine Anfrage mit Name und E-Mail-Adresse. Das dauert eine Minute.</p>
+          <h3 class="step__title" data-i18n="flow.s1.title">Plan anfragen</h3>
+          <p class="step__text" data-i18n="flow.s1.text">Wähle deinen Plan oder deine Leistungen und schick uns deine Anfrage mit Name und E-Mail-Adresse. Das dauert eine Minute.</p>
         </li>
         <li class="step">
           <span class="step__num">2</span>
-          <h3 class="step__title">Zahlungslink per E-Mail</h3>
-          <p class="step__text">Wir melden uns persönlich, klären offene Fragen und schicken dir einen Stripe-Zahlungslink für genau deinen Plan.</p>
+          <h3 class="step__title" data-i18n="flow.s2.title">Zahlungslink per E-Mail</h3>
+          <p class="step__text" data-i18n="flow.s2.text">Wir melden uns persönlich, klären offene Fragen und schicken dir einen Stripe-Zahlungslink für genau deine Bestellung.</p>
         </li>
         <li class="step">
           <span class="step__num">3</span>
-          <h3 class="step__title">Sicher bezahlen &amp; loslegen</h3>
-          <p class="step__text">Du bezahlst im Stripe-Checkout per Karte, Apple Pay oder Google Pay. Einmalzahlung, kein Abo – danach schalten wir deinen Zugang frei.</p>
+          <h3 class="step__title" data-i18n="flow.s3.title">Sicher bezahlen &amp; loslegen</h3>
+          <p class="step__text" data-i18n="flow.s3.text">Du bezahlst im Stripe-Checkout per Karte, Apple Pay oder Google Pay. Einmalzahlung, kein Abo – danach schalten wir deinen Zugang frei.</p>
         </li>
       </ol>
     </section>
 
     <section class="section" id="preise">
       <div class="section__head">
-        <h2 class="section__title">Preise</h2>
-        <p class="section__sub">Einmalzahlung statt Abo: Du zahlst für 1 oder 12 Monate, ohne automatische Verlängerung und ohne Kündigung. Keine Einrichtungsgebühr.</p>
+        <h2 class="section__title" data-i18n="plans.title">Preise</h2>
+        <p class="section__sub" data-i18n="plans.sub">Einmalzahlung statt Abo: Du zahlst für 1 oder 12 Monate, ohne automatische Verlängerung und ohne Kündigung. Keine Einrichtungsgebühr.</p>
       </div>
 
       <div class="plans">
         <article class="plan">
           <h3 class="plan__name">Starter</h3>
-          <p class="plan__desc">Für die erste eigene Community.</p>
-          <p class="plan__price"><span class="plan__amount">34,90 €</span><span class="plan__period">/Monat</span></p>
-          <a class="plan__cta" href="#anfrage" data-plan="Starter">Zahlungslink erhalten</a>
+          <p class="plan__desc" data-i18n="plans.starter.desc">Für die erste eigene Community.</p>
+          <p class="plan__price"><span class="plan__amount">34,90 €</span><span class="plan__period" data-i18n="plans.month">/Monat</span></p>
+          <a class="plan__cta" href="#anfrage" data-plan="Starter" data-i18n="plans.cta">Zahlungslink erhalten</a>
           <ul class="plan__features">
-            <li>1 Community</li>
-            <li>Bis 250 Mitglieder</li>
-            <li>Feed, Kalender und Chat</li>
-            <li>20 GB Video-Speicher</li>
-            <li>E-Mail-Support</li>
+            <li data-i18n="plans.starter.f1">1 Community</li>
+            <li data-i18n="plans.starter.f2">Bis 250 Mitglieder</li>
+            <li data-i18n="plans.starter.f3">Feed, Kalender und Chat</li>
+            <li data-i18n="plans.starter.f4">20 GB Video-Speicher</li>
+            <li data-i18n="plans.starter.f5">E-Mail-Support</li>
           </ul>
         </article>
 
         <article class="plan plan--featured">
-          <span class="plan__badge">Beliebt</span>
+          <span class="plan__badge" data-i18n="plans.popular">Beliebt</span>
           <h3 class="plan__name">Pro</h3>
-          <p class="plan__desc">Für wachsende Communities mit bezahlten Mitgliedschaften.</p>
-          <p class="plan__price"><span class="plan__amount">89 €</span><span class="plan__period">/Monat</span></p>
-          <a class="plan__cta plan__cta--solid" href="#anfrage" data-plan="Pro">Zahlungslink erhalten</a>
+          <p class="plan__desc" data-i18n="plans.pro.desc">Für wachsende Communities mit bezahlten Mitgliedschaften.</p>
+          <p class="plan__price"><span class="plan__amount">89 €</span><span class="plan__period" data-i18n="plans.month">/Monat</span></p>
+          <a class="plan__cta plan__cta--solid" href="#anfrage" data-plan="Pro" data-i18n="plans.cta">Zahlungslink erhalten</a>
           <ul class="plan__features">
-            <li>3 Communities</li>
-            <li>Bis 2.500 Mitglieder</li>
-            <li>Kurse und Live-Calls</li>
-            <li>200 GB Video-Speicher</li>
-            <li>Zahlungen und Abos</li>
-            <li>Eigene Domain</li>
+            <li data-i18n="plans.pro.f1">3 Communities</li>
+            <li data-i18n="plans.pro.f2">Bis 2.500 Mitglieder</li>
+            <li data-i18n="plans.pro.f3">Kurse und Live-Calls</li>
+            <li data-i18n="plans.pro.f4">200 GB Video-Speicher</li>
+            <li data-i18n="plans.pro.f5">Zahlungen und Mitgliedschaften</li>
+            <li data-i18n="plans.pro.f6">Eigene Domain</li>
           </ul>
         </article>
 
         <article class="plan">
           <h3 class="plan__name">Business</h3>
-          <p class="plan__desc">Für Teams, die mehrere Marken betreuen.</p>
-          <p class="plan__price"><span class="plan__amount">240 €</span><span class="plan__period">/Monat</span></p>
-          <a class="plan__cta" href="#anfrage" data-plan="Business">Zahlungslink erhalten</a>
+          <p class="plan__desc" data-i18n="plans.business.desc">Für Teams, die mehrere Marken betreuen.</p>
+          <p class="plan__price"><span class="plan__amount">240 €</span><span class="plan__period" data-i18n="plans.month">/Monat</span></p>
+          <a class="plan__cta" href="#anfrage" data-plan="Business" data-i18n="plans.cta">Zahlungslink erhalten</a>
           <ul class="plan__features">
-            <li>Unbegrenzte Communities</li>
-            <li>Unbegrenzte Mitglieder</li>
-            <li>Rollen und Team-Zugänge</li>
-            <li>1 TB Video-Speicher</li>
-            <li>API und Webhooks</li>
-            <li>Persönliche Betreuung</li>
+            <li data-i18n="plans.business.f1">Unbegrenzte Communities</li>
+            <li data-i18n="plans.business.f2">Unbegrenzte Mitglieder</li>
+            <li data-i18n="plans.business.f3">Rollen und Team-Zugänge</li>
+            <li data-i18n="plans.business.f4">1 TB Video-Speicher</li>
+            <li data-i18n="plans.business.f5">API und Webhooks</li>
+            <li data-i18n="plans.business.f6">Persönliche Betreuung</li>
           </ul>
         </article>
       </div>
 
-      <p class="plans__note">Alle Preise verstehen sich inkl. MwSt. Bei 12 Monaten Laufzeit entfallen zwei Monatsbeiträge. Die Zahlung wird sicher über Stripe abgewickelt.</p>
+      <p class="plans__note" data-i18n="plans.note">Alle Preise verstehen sich inkl. MwSt. Bei 12 Monaten Laufzeit entfallen zwei Monatsbeiträge. Die Zahlung wird sicher über Stripe abgewickelt.</p>
     </section>
 
     <section class="section" id="anfrage">
       <div class="section__head">
-        <h2 class="section__title">Plan anfragen</h2>
-        <p class="section__sub">Schick uns deine Anfrage – du erhältst in der Regel innerhalb von 24 Stunden eine E-Mail mit deinem Stripe-Zahlungslink.</p>
+        <h2 class="section__title" data-i18n="req.title">Plan anfragen</h2>
+        <p class="section__sub" data-i18n="req.sub">Schick uns deine Anfrage – du erhältst in der Regel innerhalb von 24 Stunden eine E-Mail mit deinem Stripe-Zahlungslink.</p>
       </div>
 
       <div class="request">
         <div class="request__form">
         <form class="request__fields" data-request novalidate>
           <div class="field">
-            <label for="rq-name">Name</label>
+            <label for="rq-name" data-i18n="req.name">Name</label>
             <input id="rq-name" name="name" type="text" autocomplete="name" required>
           </div>
           <div class="field">
-            <label for="rq-email">E-Mail-Adresse</label>
+            <label for="rq-email" data-i18n="req.email">E-Mail-Adresse</label>
             <input id="rq-email" name="email" type="email" autocomplete="email" required>
-            <small>An diese Adresse schicken wir deinen Zahlungslink.</small>
+            <small data-i18n="req.emailHint">An diese Adresse schicken wir deinen Zahlungslink.</small>
           </div>
           <div class="field-row">
             <div class="field">
-              <label for="rq-plan">Plan</label>
+              <label for="rq-plan" data-i18n="req.plan">Plan</label>
               <select id="rq-plan" name="plan">
                 <option>Starter</option>
                 <option selected>Pro</option>
@@ -178,207 +221,253 @@
               </select>
             </div>
             <div class="field">
-              <label for="rq-billing">Laufzeit</label>
+              <label for="rq-billing" data-i18n="req.duration">Laufzeit</label>
               <select id="rq-billing" name="billing">
-                <option>1 Monat</option>
-                <option>12 Monate (2 Monate gratis)</option>
+                <option value="monthly" data-i18n="req.month1">1 Monat</option>
+                <option value="yearly" data-i18n="req.month12">12 Monate (2 Monate gratis)</option>
               </select>
             </div>
           </div>
           <div class="field">
-            <label for="rq-msg">Worum geht es in deiner Community? <span class="field__opt">(optional)</span></label>
+            <label for="rq-msg"><span data-i18n="req.message">Worum geht es in deiner Community?</span> <span class="field__opt" data-i18n="req.optional">(optional)</span></label>
             <textarea id="rq-msg" name="message" rows="4"></textarea>
           </div>
-          <p class="request__error" id="request-error" role="alert" hidden></p>
-          <button class="request__submit" type="submit">Zahlungslink per E-Mail erhalten</button>
+          <p class="request__error" role="alert" hidden></p>
+          <button class="request__submit" type="submit" data-i18n="req.submit">Zahlungslink per E-Mail erhalten</button>
         </form>
         <div class="request__success" role="status" hidden></div>
         </div>
 
         <aside class="request__info">
-          <h3>Sicher bezahlen mit Stripe</h3>
+          <h3 data-i18n="req.info.title">Sicher bezahlen mit Stripe</h3>
           <ul class="plan__features">
-            <li>Persönlicher Zahlungslink per E-Mail</li>
-            <li>Bezahlung im offiziellen Stripe-Checkout</li>
-            <li>Karte, Apple Pay und Google Pay</li>
-            <li>Keine Zahlungsdaten auf dieser Website</li>
-            <li>Rechnung automatisch per E-Mail</li>
+            <li data-i18n="req.info.f1">Persönlicher Zahlungslink per E-Mail</li>
+            <li data-i18n="req.info.f2">Bezahlung im offiziellen Stripe-Checkout</li>
+            <li data-i18n="req.info.f3">Karte, Apple Pay und Google Pay</li>
+            <li data-i18n="req.info.f4">Keine Zahlungsdaten auf dieser Website</li>
+            <li data-i18n="req.info.f5">Rechnung automatisch per E-Mail</li>
           </ul>
-          <p class="request__small">Achte darauf, dass der Link in unserer E-Mail auf <strong>checkout.stripe.com</strong> oder <strong>buy.stripe.com</strong> führt.</p>
+          <p class="request__small" data-i18n-html="req.info.note">Achte darauf, dass der Link in unserer E-Mail auf <strong>checkout.stripe.com</strong> oder <strong>buy.stripe.com</strong> führt.</p>
         </aside>
       </div>
     </section>
 
     <section class="section" id="faq">
       <div class="section__head">
-        <h2 class="section__title">Häufige Fragen</h2>
+        <h2 class="section__title" data-i18n="faq.title">Häufige Fragen</h2>
       </div>
       <div class="faq">
         <details class="faq__item">
-          <summary class="faq__q">Wie läuft die Bezahlung ab?</summary>
-          <p class="faq__a">Nach deiner Anfrage schicken wir dir eine E-Mail mit einem Stripe-Zahlungslink. Ein Klick öffnet den Stripe-Checkout, dort gibst du deine Zahlungsdaten ein und bist fertig. Wir sehen deine Kartendaten zu keinem Zeitpunkt.</p>
+          <summary class="faq__q" data-i18n="faq.q1">Wie läuft die Bezahlung ab?</summary>
+          <p class="faq__a" data-i18n="faq.a1">Nach deiner Anfrage schicken wir dir eine E-Mail mit einem Stripe-Zahlungslink. Ein Klick öffnet den Stripe-Checkout, dort gibst du deine Zahlungsdaten ein und bist fertig. Wir sehen deine Kartendaten zu keinem Zeitpunkt.</p>
         </details>
         <details class="faq__item">
-          <summary class="faq__q">Wann bekomme ich den Zahlungslink?</summary>
-          <p class="faq__a">In der Regel innerhalb von 24 Stunden. Keine E-Mail erhalten? Schau bitte im Spam-Ordner nach oder schreib uns kurz.</p>
+          <summary class="faq__q" data-i18n="faq.q2">Wann bekomme ich den Zahlungslink?</summary>
+          <p class="faq__a" data-i18n="faq.a2">In der Regel innerhalb von 24 Stunden. Keine E-Mail erhalten? Schau bitte im Spam-Ordner nach oder schreib uns kurz.</p>
         </details>
         <details class="faq__item">
-          <summary class="faq__q">Welche Zahlungsarten gibt es?</summary>
-          <p class="faq__a">Im Stripe-Checkout kannst du mit Kredit- oder Debitkarte, Apple Pay und Google Pay bezahlen. Die Rechnung kommt automatisch per E-Mail.</p>
+          <summary class="faq__q" data-i18n="faq.q3">Welche Zahlungsarten gibt es?</summary>
+          <p class="faq__a" data-i18n="faq.a3">Im Stripe-Checkout kannst du mit Kredit- oder Debitkarte, Apple Pay und Google Pay bezahlen. Die Rechnung kommt automatisch per E-Mail.</p>
         </details>
         <details class="faq__item">
-          <summary class="faq__q">Ist das ein Abo? Muss ich kündigen?</summary>
-          <p class="faq__a">Nein. Du zahlst einmalig für 1 oder 12 Monate, es verlängert sich nichts automatisch. Möchtest du danach weitermachen oder den Plan wechseln, schreib uns kurz und du bekommst einen neuen Zahlungslink.</p>
+          <summary class="faq__q" data-i18n="faq.q4">Ist das ein Abo? Muss ich kündigen?</summary>
+          <p class="faq__a" data-i18n="faq.a4">Nein. Du zahlst einmalig für 1 oder 12 Monate, es verlängert sich nichts automatisch. Möchtest du danach weitermachen oder den Plan wechseln, schreib uns kurz und du bekommst einen neuen Zahlungslink.</p>
         </details>
         <details class="faq__item">
-          <summary class="faq__q">Nehmt ihr eine Provision auf meine Einnahmen?</summary>
-          <p class="faq__a">Nein. In Pro und Business rechnest du direkt mit deinen Mitgliedern ab; es fallen nur die Gebühren deines Zahlungsanbieters an.</p>
+          <summary class="faq__q" data-i18n="faq.q5">Wie läuft ein individuelles Service-Paket ab?</summary>
+          <p class="faq__a" data-i18n="faq.a5">Du schickst uns deine Anfrage mit den gewünschten Leistungen. Wir melden uns mit einem Angebot zum Festpreis. Nimmst du es an, bekommst du den Zahlungslink und wir starten.</p>
         </details>
         <details class="faq__item">
-          <summary class="faq__q">Gehören mir meine Inhalte und Mitgliederdaten?</summary>
-          <p class="faq__a">Ja. Du kannst Beiträge, Kurse und Mitgliederlisten jederzeit als Export herunterladen und die Community verlagern.</p>
+          <summary class="faq__q" data-i18n="faq.q6">Gehören mir meine Inhalte und Mitgliederdaten?</summary>
+          <p class="faq__a" data-i18n="faq.a6">Ja. Du kannst Beiträge, Kurse und Mitgliederlisten jederzeit als Export herunterladen und die Community verlagern.</p>
         </details>
         <details class="faq__item">
-          <summary class="faq__q">Kann ich eine eigene Domain verwenden?</summary>
-          <p class="faq__a">Ab dem Pro-Plan verbindest du deine eigene Domain. Das Zertifikat wird automatisch ausgestellt und erneuert.</p>
+          <summary class="faq__q" data-i18n="faq.q7">Kann ich eine eigene Domain verwenden?</summary>
+          <p class="faq__a" data-i18n="faq.a7">Ab dem Pro-Plan verbindest du deine eigene Domain. Das Zertifikat wird automatisch ausgestellt und erneuert.</p>
         </details>
       </div>
     </section>
 
     <section class="cta">
-      <h2 class="cta__title">Bereit für deine eigene Community?</h2>
-      <p class="cta__sub">Plan anfragen, Zahlungslink per E-Mail erhalten, sicher über Stripe bezahlen.</p>
-      <a class="cta__btn" href="#anfrage">Zahlungslink anfordern</a>
+      <h2 class="cta__title" data-i18n="cta.title">Bereit für deine eigene Community?</h2>
+      <p class="cta__sub" data-i18n="cta.sub">Plan oder Service anfragen, Zahlungslink per E-Mail erhalten, sicher über Stripe bezahlen.</p>
+      <a class="cta__btn" href="#anfrage" data-i18n="cta.btn">Zahlungslink anfordern</a>
     </section>
   </main>
 
   <footer class="footer">
     <div class="footer__inner">
       <div class="footer__brand">
-        <a class="footer__logo brand" href="index.html" aria-label="kreisel – zur Startseite"><svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg-foot" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg-foot)"/><g class="logo__spin"><circle cx="16" cy="16" r="8.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="38 15.4"/><circle cx="21.2" cy="9.3" r="1.7" fill="#fff"/></g><circle cx="16" cy="16" r="2.8" fill="#fff"/></svg><span class="brand__word">kreisel</span></a>
-        <p class="footer__tag">Communities entdecken und aufbauen.</p>
+        <a class="footer__logo brand" href="index.html" data-i18n-aria="brand.home" aria-label="kreisel – zur Startseite"><svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg-foot" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg-foot)"/><g class="logo__spin"><circle cx="16" cy="16" r="8.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="38 15.4"/><circle cx="21.2" cy="9.3" r="1.7" fill="#fff"/></g><circle cx="16" cy="16" r="2.8" fill="#fff"/></svg><span class="brand__word">kreisel</span></a>
+        <p class="footer__tag" data-i18n="foot.tag">Communities entdecken und aufbauen.</p>
       </div>
       <div class="footer__col">
-        <h3>Produkt</h3>
-        <a href="#entdecken">Entdecken</a>
-        <a href="#preise">Preise</a>
-        <a href="#ablauf">Ablauf</a>
+        <h3 data-i18n="foot.product">Produkt</h3>
+        <a href="#entdecken" data-i18n="nav.discover">Entdecken</a>
+        <a href="#services" data-i18n="nav.services">Services</a>
+        <a href="#preise" data-i18n="nav.prices">Preise</a>
       </div>
       <div class="footer__col">
-        <h3>Unternehmen</h3>
-        <a href="ueber-uns.html">Über uns</a>
-        <a href="karriere.html">Karriere</a>
-        <a href="affiliates.html">Affiliates</a>
+        <h3 data-i18n="foot.company">Unternehmen</h3>
+        <a href="ueber-uns.html" data-i18n="foot.about">Über uns</a>
+        <a href="karriere.html" data-i18n="foot.careers">Karriere</a>
+        <a href="affiliates.html" data-i18n="foot.affiliates">Affiliates</a>
       </div>
       <div class="footer__col">
-        <h3>Hilfe</h3>
-        <a href="#faq">FAQ</a>
-        <a href="#anfrage">Plan anfragen</a>
-        <a href="support.html">Support</a>
-        <a href="status.html">Status</a>
+        <h3 data-i18n="foot.help">Hilfe</h3>
+        <a href="#faq" data-i18n="nav.faq">FAQ</a>
+        <a href="#anfrage" data-i18n="nav.request">Plan anfragen</a>
+        <a href="support.html" data-i18n="foot.support">Support</a>
+        <a href="status.html" data-i18n="foot.status">Status</a>
       </div>
     </div>
     <div class="footer__bar">
       <p>© 2026 kreisel</p>
-      <nav class="footer__legal" aria-label="Rechtliches">
-        <a href="impressum.html">Impressum</a>
-        <a href="datenschutz.html">Datenschutz</a>
-        <a href="agb.html">AGB</a>
+      <nav class="footer__legal" data-i18n-aria="foot.legal" aria-label="Rechtliches">
+        <a href="impressum.html" data-i18n="foot.imprint">Impressum</a>
+        <a href="datenschutz.html" data-i18n="foot.privacy">Datenschutz</a>
+        <a href="agb.html" data-i18n="foot.terms">AGB</a>
       </nav>
     </div>
   </footer>
 
   <!-- Menüs -->
   <div class="menu" id="lang-menu" popover>
-    <p class="menu__label">Sprache</p>
-    <button class="menu__item is-active" type="button"><span>🇩🇪 Deutsch</span><span aria-hidden="true">✓</span></button>
-    <button class="menu__item" type="button" disabled><span>🇬🇧 English</span><span class="menu__tag">bald</span></button>
+    <p class="menu__label" data-i18n="lang.label">Sprache</p>
+    <button class="menu__item" type="button" data-lang="de"><span>🇩🇪 Deutsch</span></button>
+    <button class="menu__item" type="button" data-lang="en"><span>🇬🇧 English</span></button>
   </div>
 
   <div class="menu" id="account-menu" popover>
     <div class="menu__head"><strong id="account-name"></strong><small id="account-email"></small></div>
-    <p class="menu__label">Meine Communities</p>
+    <p class="menu__label" data-i18n="acc.communities">Meine Communities</p>
     <div id="account-joined"></div>
     <div class="menu__sep"></div>
-    <a class="menu__item" href="#anfrage">Eigene Community starten</a>
-    <button class="menu__item" type="button" id="logout-btn">Abmelden</button>
+    <a class="menu__item" href="#anfrage" data-i18n="acc.start">Eigene Community starten</a>
+    <button class="menu__item" type="button" id="logout-btn" data-i18n="acc.logout">Abmelden</button>
   </div>
 
   <div class="menu" id="more-menu" popover></div>
 
   <div class="menu menu--wide" id="filter-menu" popover>
-    <p class="menu__label">Sortieren</p>
-    <label class="menu__opt"><input type="radio" name="sort" value="popular" checked> Meiste Mitglieder</label>
-    <label class="menu__opt"><input type="radio" name="sort" value="name"> Name (A–Z)</label>
+    <p class="menu__label" data-i18n="filters.sort">Sortieren</p>
+    <label class="menu__opt"><input type="radio" name="sort" value="popular" checked> <span data-i18n="filters.sortMembers">Meiste Mitglieder</span></label>
+    <label class="menu__opt"><input type="radio" name="sort" value="name"> <span data-i18n="filters.sortName">Name (A–Z)</span></label>
     <div class="menu__sep"></div>
-    <p class="menu__label">Preis</p>
-    <label class="menu__opt"><input type="radio" name="price" value="all" checked> Alle</label>
-    <label class="menu__opt"><input type="radio" name="price" value="free"> Kostenlos</label>
-    <label class="menu__opt"><input type="radio" name="price" value="paid"> Bezahlt</label>
+    <p class="menu__label" data-i18n="filters.price">Preis</p>
+    <label class="menu__opt"><input type="radio" name="price" value="all" checked> <span data-i18n="filters.priceAll">Alle</span></label>
+    <label class="menu__opt"><input type="radio" name="price" value="free"> <span data-i18n="filters.priceFree">Kostenlos</span></label>
+    <label class="menu__opt"><input type="radio" name="price" value="paid"> <span data-i18n="filters.pricePaid">Bezahlt</span></label>
     <div class="menu__sep"></div>
-    <button class="menu__item" type="button" id="filter-reset">Filter zurücksetzen</button>
+    <button class="menu__item" type="button" id="filter-reset" data-i18n="filters.reset">Filter zurücksetzen</button>
   </div>
 
   <!-- Anmelden / Registrieren -->
   <dialog class="dialog" id="auth-dialog" aria-labelledby="auth-title">
-    <form method="dialog"><button class="dialog__close" aria-label="Schließen">×</button></form>
+    <form method="dialog"><button class="dialog__close" data-i18n-aria="dlg.close" aria-label="Schließen">×</button></form>
     <svg class="logo dialog__logo" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg-auth" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg-auth)"/><g class="logo__spin"><circle cx="16" cy="16" r="8.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="38 15.4"/><circle cx="21.2" cy="9.3" r="1.7" fill="#fff"/></g><circle cx="16" cy="16" r="2.8" fill="#fff"/></svg>
     <h2 class="dialog__title" id="auth-title">Willkommen zurück</h2>
     <p class="dialog__sub" id="auth-sub">Melde dich bei kreisel an.</p>
     <div class="tabs">
-      <button class="tabs__btn is-active" type="button" data-mode="login">Anmelden</button>
-      <button class="tabs__btn" type="button" data-mode="register">Registrieren</button>
+      <button class="tabs__btn is-active" type="button" data-mode="login" data-i18n="auth.tab.login">Anmelden</button>
+      <button class="tabs__btn" type="button" data-mode="register" data-i18n="auth.tab.register">Registrieren</button>
     </div>
     <form class="dialog__form" id="auth-form" novalidate>
       <div class="field" id="auth-name-field" hidden>
-        <label for="au-name">Name</label>
+        <label for="au-name" data-i18n="req.name">Name</label>
         <input id="au-name" name="name" type="text" autocomplete="name">
       </div>
       <div class="field" id="auth-email-field">
-        <label for="au-email">E-Mail-Adresse</label>
+        <label for="au-email" data-i18n="req.email">E-Mail-Adresse</label>
         <input id="au-email" name="email" type="email" autocomplete="email">
       </div>
       <div class="field" id="auth-pw-field">
-        <label for="au-pw">Passwort</label>
+        <label for="au-pw" data-i18n="auth.password">Passwort</label>
         <input id="au-pw" name="password" type="password" autocomplete="current-password">
-        <small id="auth-pw-hint" hidden>Mindestens 8 Zeichen.</small>
+        <small id="auth-pw-hint" data-i18n="auth.pwHint" hidden>Mindestens 8 Zeichen.</small>
       </div>
-      <button class="auth__link" type="button" id="auth-forgot">Passwort vergessen?</button>
+      <button class="auth__link" type="button" id="auth-forgot" data-i18n="auth.forgot">Passwort vergessen?</button>
       <p class="request__error" id="auth-error" role="alert" hidden></p>
       <button class="request__submit" type="submit" id="auth-submit">Anmelden</button>
-      <button class="auth__link" type="button" id="auth-back" hidden>← Zurück zur Anmeldung</button>
+      <button class="auth__link" type="button" id="auth-back" data-i18n="auth.back" hidden>← Zurück zur Anmeldung</button>
     </form>
     <p class="auth__info" id="auth-info" role="status" hidden></p>
   </dialog>
 
   <!-- Zahlungslink anfordern (Preis-Buttons) -->
   <dialog class="dialog" id="plan-dialog" aria-labelledby="plan-title">
-    <form method="dialog"><button class="dialog__close" aria-label="Schließen">×</button></form>
+    <form method="dialog"><button class="dialog__close" data-i18n-aria="dlg.close" aria-label="Schließen">×</button></form>
     <p class="dialog__eyebrow" id="plan-eyebrow"></p>
-    <h2 class="dialog__title" id="plan-title">Zahlungslink anfordern</h2>
-    <p class="dialog__sub">Wir schicken dir den Stripe-Zahlungslink direkt per E-Mail.</p>
+    <h2 class="dialog__title" id="plan-title" data-i18n="dlg.plan.title">Zahlungslink anfordern</h2>
+    <p class="dialog__sub" data-i18n="dlg.plan.sub">Wir schicken dir den Stripe-Zahlungslink direkt per E-Mail.</p>
     <div class="request__form dialog__request">
       <form class="request__fields" data-request novalidate>
         <input type="hidden" name="plan">
         <div class="field">
-          <label for="pd-name">Name</label>
+          <label for="pd-name" data-i18n="req.name">Name</label>
           <input id="pd-name" name="name" type="text" autocomplete="name" required>
         </div>
         <div class="field">
-          <label for="pd-email">E-Mail-Adresse</label>
+          <label for="pd-email" data-i18n="req.email">E-Mail-Adresse</label>
           <input id="pd-email" name="email" type="email" autocomplete="email" required>
-          <small>An diese Adresse schicken wir deinen Zahlungslink.</small>
+          <small data-i18n="req.emailHint">An diese Adresse schicken wir deinen Zahlungslink.</small>
         </div>
         <div class="field">
-          <label for="pd-billing">Laufzeit</label>
+          <label for="pd-billing" data-i18n="req.duration">Laufzeit</label>
           <select id="pd-billing" name="billing">
-            <option>1 Monat</option>
-            <option>12 Monate (2 Monate gratis)</option>
+            <option value="monthly" data-i18n="req.month1">1 Monat</option>
+            <option value="yearly" data-i18n="req.month12">12 Monate (2 Monate gratis)</option>
           </select>
         </div>
         <p class="request__error" role="alert" hidden></p>
-        <button class="request__submit" type="submit">Zahlungslink per E-Mail erhalten</button>
-        <p class="dialog__note">🔒 Bezahlung sicher im Stripe-Checkout</p>
+        <button class="request__submit" type="submit" data-i18n="req.submit">Zahlungslink per E-Mail erhalten</button>
+        <p class="dialog__note" data-i18n="dlg.plan.note">🔒 Bezahlung sicher im Stripe-Checkout</p>
+      </form>
+      <div class="request__success" role="status" hidden></div>
+    </div>
+  </dialog>
+
+  <!-- Individuelles Service-Paket -->
+  <dialog class="dialog" id="service-dialog" aria-labelledby="service-title">
+    <form method="dialog"><button class="dialog__close" data-i18n-aria="dlg.close" aria-label="Schließen">×</button></form>
+    <h2 class="dialog__title" id="service-title" data-i18n="dlg.service.title">Individuelles Paket anfragen</h2>
+    <p class="dialog__sub" data-i18n="dlg.service.sub">Wähle die Leistungen aus. Wir melden uns mit einem Angebot zum Festpreis und deinem Zahlungslink.</p>
+    <div class="request__form dialog__request">
+      <form class="request__fields" data-request data-kind="service" novalidate>
+        <fieldset class="checks">
+          <legend data-i18n="dlg.service.what">Gewünschte Leistungen</legend>
+          <label class="check"><input type="checkbox" name="services" value="Social-Media-Marketing"> <span data-i18n="services.smm.title">Social-Media-Marketing</span></label>
+          <label class="check"><input type="checkbox" name="services" value="Webdesign"> <span data-i18n="services.web.title">Webdesign</span></label>
+          <label class="check"><input type="checkbox" name="services" value="Google SEO"> <span data-i18n="services.seo.title">Google SEO</span></label>
+          <label class="check"><input type="checkbox" name="services" value="Werbeanzeigen"> <span data-i18n="services.ads.title">Werbeanzeigen</span></label>
+          <label class="check"><input type="checkbox" name="services" value="Content & Video"> <span data-i18n="services.content.title">Content &amp; Video</span></label>
+          <label class="check"><input type="checkbox" name="services" value="Branding & Grafik"> <span data-i18n="services.brand.title">Branding &amp; Grafik</span></label>
+        </fieldset>
+        <div class="field">
+          <label for="sv-name" data-i18n="req.name">Name</label>
+          <input id="sv-name" name="name" type="text" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="sv-email" data-i18n="req.email">E-Mail-Adresse</label>
+          <input id="sv-email" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="sv-budget" data-i18n="dlg.service.budget">Budget-Rahmen</label>
+          <select id="sv-budget" name="budget">
+            <option data-i18n="dlg.service.budget1">Noch offen</option>
+            <option data-i18n="dlg.service.budget2">bis 500 €</option>
+            <option data-i18n="dlg.service.budget3">500 – 2.000 €</option>
+            <option data-i18n="dlg.service.budget4">2.000 – 5.000 €</option>
+            <option data-i18n="dlg.service.budget5">mehr als 5.000 €</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="sv-msg"><span data-i18n="dlg.service.msg">Was möchtest du erreichen?</span> <span class="field__opt" data-i18n="req.optional">(optional)</span></label>
+          <textarea id="sv-msg" name="message" rows="3"></textarea>
+        </div>
+        <p class="request__error" role="alert" hidden></p>
+        <button class="request__submit" type="submit" data-i18n="dlg.service.submit">Unverbindliches Angebot anfordern</button>
+        <p class="dialog__note" data-i18n="dlg.service.note">Unverbindlich – du zahlst erst, wenn du das Angebot annimmst.</p>
       </form>
       <div class="request__success" role="status" hidden></div>
     </div>
@@ -386,11 +475,12 @@
 
   <!-- Community-Details -->
   <dialog class="dialog dialog--community" id="community-dialog" aria-label="Community">
-    <form method="dialog"><button class="dialog__close" aria-label="Schließen">×</button></form>
+    <form method="dialog"><button class="dialog__close" data-i18n-aria="dlg.close" aria-label="Schließen">×</button></form>
     <div id="community-body"></div>
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="i18n.js"></script>
   <script src="config.js"></script>
   <script src="app.js"></script>
 </body>

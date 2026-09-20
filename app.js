@@ -71,11 +71,19 @@ const initials = (name) =>
 const escapeHtml = (s) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+const byId = (id) => COMMUNITIES.find((c) => c.id === id);
+const catLabel = (id) => {
+  const c = CATEGORIES.find((x) => x.id === id);
+  return `${c.emoji} ${t(`cat.${id}`)}`;
+};
+const priceLabel = (price) =>
+  price === "Kostenlos" ? t("price.free") : price.replace("/Monat", `/${t("price.month")}`);
+
 function renderFilters() {
   $filters.innerHTML = CATEGORIES.map(
     (c) => `<button class="pill${c.id === state.category ? " is-active" : ""}" type="button" role="tab"
       aria-selected="${c.id === state.category}" data-cat="${c.id}">
-      <span aria-hidden="true">${c.emoji}</span>${c.label}</button>`
+      <span aria-hidden="true">${c.emoji}</span>${t(`cat.${c.id}`)}</button>`
   ).join("");
 }
 
@@ -102,7 +110,7 @@ function cardHtml(c, rank) {
         <h2 class="card__name">${escapeHtml(c.name)}</h2>
       </div>
       <p class="card__desc">${escapeHtml(c.desc)}</p>
-      <p class="card__meta"><span class="card__example">Beispiel</span>${fmtMembers(c.members)} Mitglieder<span class="sep">•</span>${c.price}</p>
+      <p class="card__meta">${fmtMembers(c.members)} ${t("card.members")}<span class="sep">•</span>${priceLabel(c.price)}</p>
     </div>
   </a>`;
 }
@@ -125,14 +133,14 @@ function renderPagination(total) {
   if (total <= 1) { $pagination.innerHTML = ""; return; }
   const { page } = state;
   $pagination.innerHTML = [
-    `<button class="page-btn" type="button" data-page="${page - 1}" ${page === 1 ? "disabled" : ""}>Zurück</button>`,
+    `<button class="page-btn" type="button" data-page="${page - 1}" ${page === 1 ? "disabled" : ""}>${t("page.prev")}</button>`,
     ...pageList(page, total).map((p) =>
       p === "…"
         ? `<span class="page-gap">…</span>`
         : `<button class="page-btn${p === page ? " is-current" : ""}" type="button" data-page="${p}"
             ${p === page ? 'aria-current="page"' : ""}>${p}</button>`
     ),
-    `<button class="page-btn" type="button" data-page="${page + 1}" ${page === total ? "disabled" : ""}>Weiter</button>`,
+    `<button class="page-btn" type="button" data-page="${page + 1}" ${page === total ? "disabled" : ""}>${t("page.next")}</button>`,
   ].join("");
 }
 
@@ -178,31 +186,24 @@ $pagination.addEventListener("click", (e) => {
   document.querySelector(".filters").scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
-renderFilters();
-render();
-
-// ---------- Plan-Anfrage (Zahlungslink per E-Mail) ----------
+// ---------- Anfragen (Plan & individuelles Service-Paket) ----------
 // Die Supabase Edge Function "payment-link" erstellt den Stripe-Zahlungslink und
 // schickt ihn per E-Mail an den Kunden (und eine Benachrichtigung an CONTACT_EMAIL).
-async function sendRequest({ name, email, plan, billing, message = "" }) {
+async function sendRequest(payload) {
   if (!sb) throw new Error("Supabase nicht verfügbar");
-  const { data, error } = await sb.functions.invoke("payment-link", {
-    body: {
-      name, email, plan, message,
-      billing: billing.startsWith("12") ? "yearly" : "monthly",
-    },
-  });
+  const { data, error } = await sb.functions.invoke("payment-link", { body: payload });
   if (error || !data?.sent) throw error || new Error("Senden fehlgeschlagen");
-  return { link: true, order: data.order };
+  return { order: data.order, quoteOnly: payload.kind === "service" };
 }
 
-function mailtoFallback({ name, email, plan, billing, message = "" }) {
-  const subject = `Plan-Anfrage: ${plan} (${billing})`;
+function mailtoFallback(data) {
+  const lines = data.kind === "service"
+    ? [`Leistungen: ${data.services.join(", ")}`, `Budget: ${data.budget}`]
+    : [`Plan: ${data.plan}`, `Laufzeit: ${data.billing === "yearly" ? "12 Monate" : "1 Monat"}`];
+  const subject = data.kind === "service" ? "Anfrage: Individuelles Service-Paket" : `Plan-Anfrage: ${data.plan}`;
   const body = [
-    "Hallo kreisel-Team,", "",
-    `ich möchte den Plan „${plan}“ buchen und bitte um einen Stripe-Zahlungslink.`, "",
-    `Name: ${name}`, `E-Mail: ${email}`, `Plan: ${plan}`, `Laufzeit: ${billing}`,
-    message ? `\nZu meiner Community:\n${message}` : "",
+    `Name: ${data.name}`, `E-Mail: ${data.email}`, ...lines,
+    data.message ? `\n${data.message}` : "",
   ].join("\n");
   return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
@@ -211,43 +212,53 @@ document.querySelectorAll("form[data-request]").forEach((form) => {
   const $error = form.querySelector(".request__error");
   const $submit = form.querySelector('[type="submit"]');
   const $success = form.parentElement.querySelector(".request__success");
+  const isService = form.dataset.kind === "service";
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const raw = Object.fromEntries(new FormData(form));
+    const fd = new FormData(form);
     const data = {
-      name: (raw.name || "").trim(),
-      email: (raw.email || "").trim(),
-      plan: raw.plan,
-      billing: raw.billing,
-      message: (raw.message || "").trim(),
+      kind: isService ? "service" : "plan",
+      name: (fd.get("name") || "").trim(),
+      email: (fd.get("email") || "").trim(),
+      message: (fd.get("message") || "").trim(),
     };
+    if (isService) {
+      data.services = fd.getAll("services");
+      data.budget = fd.get("budget");
+    } else {
+      data.plan = fd.get("plan");
+      data.billing = fd.get("billing");
+    }
 
     if (!data.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-      $error.textContent = "Bitte gib deinen Namen und eine gültige E-Mail-Adresse an.";
+      $error.textContent = t("req.err.fields");
+      $error.hidden = false;
+      return;
+    }
+    if (isService && !data.services.length) {
+      $error.textContent = t("dlg.service.err");
       $error.hidden = false;
       return;
     }
     $error.hidden = true;
     const label = $submit.textContent;
     $submit.disabled = true;
-    $submit.textContent = "Wird gesendet…";
+    $submit.textContent = t("req.sending");
 
     try {
-      const { link, order } = await sendRequest(data);
+      const { order, quoteOnly } = await sendRequest(data);
       form.hidden = true;
       $success.hidden = false;
       $success.innerHTML = `
         <div class="request__check" aria-hidden="true">✓</div>
-        <h3>Anfrage gesendet!</h3>
-        <p>Wir haben eine E-Mail an <strong>${escapeHtml(data.email)}</strong> geschickt${link
-          ? " – darin findest du deinen Stripe-Zahlungslink für den Plan „" + escapeHtml(data.plan) + "“."
-          : ". Deinen persönlichen Stripe-Zahlungslink bekommst du in Kürze."}</p>
-        ${order ? `<p class="request__order">Bestellnummer <strong>${escapeHtml(order)}</strong></p>` : ""}
-        <p class="request__small">Keine E-Mail da? Schau bitte auch im Spam-Ordner nach.</p>
-        <button class="btn-ghost" type="button" data-request-again>Weitere Anfrage senden</button>`;
+        <h3>${t("req.ok.title")}</h3>
+        <p>${t("req.ok.sent")} <strong>${escapeHtml(data.email)}</strong> ${quoteOnly ? t("req.ok.quote") : t("req.ok.link")}</p>
+        ${order ? `<p class="request__order">${t("req.ok.order")} <strong>${escapeHtml(order)}</strong></p>` : ""}
+        <p class="request__small">${t("req.ok.spam")}</p>
+        <button class="btn-ghost" type="button" data-request-again>${t("req.ok.again")}</button>`;
     } catch {
-      $error.innerHTML = `Die Anfrage konnte gerade nicht gesendet werden. <a href="${mailtoFallback(data)}">Hier klicken, um sie per E-Mail zu schicken</a>.`;
+      $error.innerHTML = `${t("req.err.send")} <a href="${mailtoFallback(data)}">${t("req.err.mailto")}</a>.`;
       $error.hidden = false;
     } finally {
       $submit.disabled = false;
@@ -267,30 +278,36 @@ document.querySelectorAll("form[data-request]").forEach((form) => {
 const $planDialog = document.getElementById("plan-dialog");
 const $planForm = $planDialog.querySelector("form[data-request]");
 
+function resetRequestDialog(dialog) {
+  const form = dialog.querySelector("form[data-request]");
+  form.reset();
+  form.hidden = false;
+  form.querySelector(".request__error").hidden = true;
+  dialog.querySelector(".request__success").hidden = true;
+  if (me) {
+    form.elements.name.value = me.name;
+    form.elements.email.value = me.email;
+  }
+  return form;
+}
+
 document.querySelectorAll("[data-plan]").forEach((btn) =>
   btn.addEventListener("click", (e) => {
     e.preventDefault();
-    const plan = btn.dataset.plan;
     const card = btn.closest(".plan");
     const price = card.querySelector(".plan__amount").textContent + card.querySelector(".plan__period").textContent;
-    $planForm.reset();
-    $planForm.hidden = false;
-    $planDialog.querySelector(".request__success").hidden = true;
-    $planForm.querySelector(".request__error").hidden = true;
-    $planForm.elements.plan.value = plan;
-    document.getElementById("plan-eyebrow").textContent = `${plan} · ${price}`;
-    const user = typeof currentUser === "function" ? currentUser() : null;
-    if (user) {
-      $planForm.elements.name.value = user.name;
-      $planForm.elements.email.value = user.email;
-    }
+    const form = resetRequestDialog($planDialog);
+    form.elements.plan.value = btn.dataset.plan;
+    document.getElementById("plan-eyebrow").textContent = `${btn.dataset.plan} · ${price}`;
     $planDialog.showModal();
   })
 );
 
-// ---------- Hilfen ----------
-const byId = (id) => COMMUNITIES.find((c) => c.id === id);
-const CAT_LABEL = Object.fromEntries(CATEGORIES.map((c) => [c.id, `${c.emoji} ${c.label}`]));
+const $serviceDialog = document.getElementById("service-dialog");
+document.getElementById("package-btn").addEventListener("click", () => {
+  resetRequestDialog($serviceDialog);
+  $serviceDialog.showModal();
+});
 
 // ---------- Menüs (Popover) ----------
 document.querySelectorAll(".menu[popover]").forEach((menu) => {
@@ -326,10 +343,14 @@ document.querySelectorAll('.brand[href="index.html"]').forEach((a) =>
 
 // ---------- Kategorien "Mehr…" ----------
 const $moreMenu = document.getElementById("more-menu");
-$moreMenu.innerHTML = `<p class="menu__label">Alle Kategorien</p>` + CATEGORIES.map((c) => {
-  const n = c.id === "all" ? COMMUNITIES.length : COMMUNITIES.filter((x) => x.category === c.id).length;
-  return `<button class="menu__item" type="button" data-cat="${c.id}"><span>${c.emoji} ${c.label}</span><span class="menu__num">${n}</span></button>`;
-}).join("");
+
+function renderMoreMenu() {
+  $moreMenu.innerHTML = `<p class="menu__label">${t("filters.all")}</p>` + CATEGORIES.map((c) => {
+    const n = c.id === "all" ? COMMUNITIES.length : COMMUNITIES.filter((x) => x.category === c.id).length;
+    return `<button class="menu__item" type="button" data-cat="${c.id}"><span>${c.emoji} ${t(`cat.${c.id}`)}</span><span class="menu__num">${n}</span></button>`;
+  }).join("");
+}
+
 $moreMenu.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-cat]");
   if (!btn) return;
@@ -384,16 +405,8 @@ let me = null; // { id, name, email, joined: [communityId, …] }
 const currentUser = () => me;
 const redirectUrl = () => location.origin + location.pathname;
 
-const AUTH_TEXT = {
-  login:    { title: "Willkommen zurück", sub: "Melde dich bei kreisel an.", submit: "Anmelden" },
-  register: { title: "Konto erstellen", sub: "Kostenlos registrieren und Communities beitreten.", submit: "Konto erstellen" },
-  reset:    { title: "Passwort vergessen", sub: "Wir schicken dir einen Link zum Zurücksetzen.", submit: "Link senden" },
-  newpw:    { title: "Neues Passwort", sub: "Lege ein neues Passwort für dein Konto fest.", submit: "Passwort speichern" },
-};
-
 function setAuthMode(mode, note) {
   authMode = mode;
-  const t = AUTH_TEXT[mode];
   $authDialog.querySelectorAll("[data-mode]").forEach((b) => b.classList.toggle("is-active", b.dataset.mode === mode));
   $authDialog.querySelector(".tabs").hidden = mode === "reset" || mode === "newpw";
   document.getElementById("auth-name-field").hidden = mode !== "register";
@@ -403,9 +416,9 @@ function setAuthMode(mode, note) {
   document.getElementById("auth-forgot").hidden = mode !== "login";
   document.getElementById("auth-back").hidden = mode !== "reset";
   document.getElementById("au-pw").autocomplete = mode === "login" ? "current-password" : "new-password";
-  document.getElementById("auth-title").textContent = t.title;
-  document.getElementById("auth-sub").textContent = note || t.sub;
-  $authSubmit.textContent = t.submit;
+  document.getElementById("auth-title").textContent = t(`auth.${mode}.title`);
+  document.getElementById("auth-sub").textContent = note || t(`auth.${mode}.sub`);
+  $authSubmit.textContent = t(`auth.${mode}.submit`);
   $authForm.hidden = false;
   $authError.hidden = true;
   $authInfo.hidden = true;
@@ -419,12 +432,12 @@ function openAuth(mode = "login", note) {
 
 function authErrorText(err) {
   const m = (err?.message || "").toLowerCase();
-  if (m.includes("invalid login")) return "E-Mail-Adresse oder Passwort ist falsch.";
-  if (m.includes("not confirmed")) return "Bitte bestätige zuerst deine E-Mail-Adresse über den Link in unserer E-Mail.";
-  if (m.includes("already registered")) return "Mit dieser E-Mail gibt es schon ein Konto. Melde dich an.";
-  if (err?.status === 429 || m.includes("rate limit")) return "Zu viele Versuche. Bitte warte kurz und versuch es dann erneut.";
-  if (m.includes("password")) return "Das Passwort ist zu schwach. Bitte wähle ein längeres Passwort.";
-  return "Das hat leider nicht geklappt. Bitte versuch es erneut.";
+  if (m.includes("invalid login")) return t("auth.err.credentials");
+  if (m.includes("not confirmed")) return t("auth.err.confirm");
+  if (m.includes("already registered")) return t("auth.err.exists");
+  if (err?.status === 429 || m.includes("rate limit")) return t("auth.err.rate");
+  if (m.includes("password")) return t("auth.err.weak");
+  return t("auth.err.generic");
 }
 
 document.getElementById("login-btn").addEventListener("click", () => openAuth("login"));
@@ -443,17 +456,15 @@ $authForm.addEventListener("submit", async (e) => {
   const fail = (msg) => { $authError.textContent = msg; $authError.hidden = false; };
   const info = (msg) => { $authForm.hidden = true; $authInfo.textContent = msg; $authInfo.hidden = false; };
 
-  if (!sb) return fail("Konten sind gerade nicht verfügbar. Bitte versuch es später erneut.");
-  if (authMode !== "newpw" && !EMAIL_RE.test(email)) return fail("Bitte gib eine gültige E-Mail-Adresse an.");
-  if (authMode === "register" && !name) return fail("Bitte gib deinen Namen an.");
-  if ((authMode === "register" || authMode === "newpw") && password.length < 8) {
-    return fail("Das Passwort muss mindestens 8 Zeichen lang sein.");
-  }
-  if (authMode === "login" && !password) return fail("Bitte gib dein Passwort ein.");
+  if (!sb) return fail(t("auth.err.off"));
+  if (authMode !== "newpw" && !EMAIL_RE.test(email)) return fail(t("auth.err.email"));
+  if (authMode === "register" && !name) return fail(t("auth.err.name"));
+  if ((authMode === "register" || authMode === "newpw") && password.length < 8) return fail(t("auth.err.pw"));
+  if (authMode === "login" && !password) return fail(t("auth.err.pwEmpty"));
 
   $authError.hidden = true;
   $authSubmit.disabled = true;
-  $authSubmit.textContent = "Einen Moment…";
+  $authSubmit.textContent = t("auth.wait");
 
   try {
     if (authMode === "login") {
@@ -467,21 +478,21 @@ $authForm.addEventListener("submit", async (e) => {
       if (error) throw error;
       if (res.user && res.user.identities?.length === 0) throw new Error("already registered");
       if (res.session) await afterLogin(res.session);
-      else info(`Fast geschafft! Wir haben dir eine E-Mail an ${email} geschickt. Klicke auf den Link darin, um dein Konto zu bestätigen.`);
+      else info(t("auth.info.confirm"));
     } else if (authMode === "reset") {
       const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl() });
       if (error) throw error;
-      info(`Falls es ein Konto zu ${email} gibt, haben wir dir einen Link zum Zurücksetzen geschickt.`);
+      info(t("auth.info.reset"));
     } else {
       const { error } = await sb.auth.updateUser({ password });
       if (error) throw error;
-      info("Dein neues Passwort ist gespeichert. Du bist angemeldet.");
+      info(t("auth.info.newpw"));
     }
   } catch (err) {
     fail(authErrorText(err));
   } finally {
     $authSubmit.disabled = false;
-    $authSubmit.textContent = AUTH_TEXT[authMode].submit;
+    $authSubmit.textContent = t(`auth.${authMode}.submit`);
   }
 });
 $authDialog.addEventListener("close", () => { pendingJoin = null; });
@@ -544,10 +555,11 @@ function renderAccount() {
   if (!me) return;
   $accountBtn.textContent = initials(me.name);
   document.getElementById("account-name").textContent = me.name;
-  document.getElementById("account-email").textContent = me.email;  document.getElementById("account-joined").innerHTML = me.joined.length
+  document.getElementById("account-email").textContent = me.email;
+  document.getElementById("account-joined").innerHTML = me.joined.length
     ? me.joined.map(byId).filter(Boolean).map((c) =>
         `<a class="menu__item" href="#community-${c.id}"><span>${c.emoji} ${escapeHtml(c.name)}</span></a>`).join("")
-    : `<p class="menu__empty">Noch keiner Community beigetreten.</p>`;
+    : `<p class="menu__empty">${t("acc.none")}</p>`;
 }
 
 $accountMenu.addEventListener("click", (e) => {
@@ -579,21 +591,20 @@ function renderCommunity(c) {
         <span class="card__avatar" style="background:${from}">${initials(c.name)}</span>
         <div>
           <h2 class="community__name">${escapeHtml(c.name)}</h2>
-          <p class="community__meta">${CAT_LABEL[c.category]} · ${c.members.toLocaleString("de-DE")} Mitglieder · ${c.price}</p>
+          <p class="community__meta">${catLabel(c.category)} · ${c.members.toLocaleString("de-DE")} ${t("card.members")} · ${priceLabel(c.price)}</p>
         </div>
       </div>
-      <p class="community__example">Beispiel-Community: Sie zeigt, wie eine Community auf kreisel aussehen kann. Name, Inhalte und Mitgliederzahl sind frei erfunden.</p>
       <p class="community__desc">${escapeHtml(c.desc)}</p>
       <ul class="plan__features">
-        <li>Feed mit Diskussionen und Fragen</li>
-        <li>Kalender mit Live-Calls</li>
-        <li>${free ? "Kostenloser Zugang" : `Mitgliedschaft ${c.price}, monatlich kündbar`}</li>
+        <li>${t("com.f1")}</li>
+        <li>${t("com.f2")}</li>
+        <li>${free ? t("com.free") : `${t("com.paid")} ${priceLabel(c.price)}`}</li>
       </ul>
       ${joined
-        ? `<p class="community__joined">✓ Du bist Mitglied dieser Community</p>
-           <button class="btn-ghost" type="button" data-leave="${c.id}">Community verlassen</button>`
-        : `<button class="request__submit" type="button" data-join="${c.id}">${free ? "Kostenlos beitreten" : `Beitreten · ${c.price}`}</button>
-           ${me ? "" : `<p class="dialog__note">Zum Beitreten brauchst du ein kostenloses kreisel-Konto.</p>`}`}
+        ? `<p class="community__joined">${t("com.member")}</p>
+           <button class="btn-ghost" type="button" data-leave="${c.id}">${t("com.leave")}</button>`
+        : `<button class="request__submit" type="button" data-join="${c.id}">${free ? t("com.join") : `${t("com.joinPaid")} · ${priceLabel(c.price)}`}</button>
+           ${me ? "" : `<p class="dialog__note">${t("com.needAccount")}</p>`}`}
     </div>`;
 }
 
@@ -611,7 +622,7 @@ $communityBody.addEventListener("click", async (e) => {
   const id = Number(btn.dataset.join || btn.dataset.leave);
   if (!me) {
     $communityDialog.close();
-    openAuth("register", "Erstelle ein kostenloses Konto, um beizutreten.");
+    openAuth("register", t("com.authNote"));
     pendingJoin = id;
     return;
   }
@@ -621,7 +632,7 @@ $communityBody.addEventListener("click", async (e) => {
     renderCommunity(byId(id));
   } catch {
     btn.disabled = false;
-    btn.textContent = "Fehler – bitte erneut versuchen";
+    btn.textContent = t("com.error");
   }
 });
 
@@ -645,5 +656,19 @@ document.querySelectorAll("dialog").forEach((d) =>
   })
 );
 
+// Sprachwechsel: dynamische Teile neu aufbauen
+document.addEventListener("langchange", () => {
+  renderFilters();
+  render();
+  renderMoreMenu();
+  renderAccount();
+  if ($authDialog.open) setAuthMode(authMode);
+  if ($communityDialog.open && openCommunityId) renderCommunity(byId(openCommunityId));
+});
+
+renderFilters();
+renderMoreMenu();
+syncFilterMenu();
+render();
 renderAccount();
 openFromHash();

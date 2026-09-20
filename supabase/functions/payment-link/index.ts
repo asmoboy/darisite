@@ -136,9 +136,55 @@ Deno.serve(async (req) => {
     const name = String(body.name ?? "").trim().slice(0, 100);
     const email = String(body.email ?? "").trim().toLowerCase();
     const message = String(body.message ?? "").trim().slice(0, 2000);
+    const isService = body.kind === "service";
+
+    if (!name || !EMAIL_RE.test(email)) return json({ error: "Name oder E-Mail fehlt" }, 400);
+
+    // Individuelles Service-Paket: nur Anfrage, Angebot und Zahlungslink folgen manuell
+    if (isService) {
+      const services = (Array.isArray(body.services) ? body.services : [])
+        .map((s: unknown) => String(s).trim().slice(0, 80)).filter(Boolean).slice(0, 20);
+      const budget = String(body.budget ?? "").trim().slice(0, 80);
+      if (!services.length) return json({ error: "Keine Leistungen gewählt" }, 400);
+
+      const order = orderNumber();
+      await sendMail({
+        to: email,
+        subject: `Deine Anfrage bei kreisel – ${order}`,
+        replyTo: OWNER_EMAIL,
+        html: layout(`
+          <h1 style="margin:0 0 12px;font-size:24px;letter-spacing:-0.03em">Hallo ${esc(name)},</h1>
+          <p style="margin:0 0 20px;color:#3f3f3f;line-height:1.6">danke für deine Anfrage! Wir melden uns in der Regel innerhalb von 24 Stunden mit einem Angebot zum Festpreis und deinem Zahlungslink.</p>
+          <p style="margin:0 0 20px;padding:12px 16px;background:#f8f7f4;border-radius:10px;font-size:14px;color:#3f3f3f">Deine Anfragenummer: <strong style="font-family:Consolas,monospace;color:#111">${order}</strong></p>
+          <p style="margin:0 0 20px;color:#3f3f3f;line-height:1.6"><strong>Gewünschte Leistungen:</strong><br>${services.map(esc).join("<br>")}</p>
+          <p style="margin:0;color:#3f3f3f">Viele Grüße<br>dein kreisel-Team</p>`),
+      });
+
+      try {
+        await sendMail({
+          to: OWNER_EMAIL,
+          subject: `${order} – Service-Anfrage: ${services.join(", ")} – ${name}`,
+          replyTo: email,
+          html: layout(`
+            <h1 style="margin:0 0 16px;font-size:20px">Neue Service-Anfrage</h1>
+            <table style="width:100%;border-collapse:collapse;font-size:14px;line-height:1.6">
+              <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Anfragenummer</td><td><strong style="font-family:Consolas,monospace">${order}</strong></td></tr>
+              <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Name</td><td>${esc(name)}</td></tr>
+              <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">E-Mail</td><td>${esc(email)}</td></tr>
+              <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Leistungen</td><td>${services.map(esc).join(", ")}</td></tr>
+              <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0">Budget</td><td>${esc(budget) || "–"}</td></tr>
+              <tr><td style="color:#6b6b6b;padding:4px 12px 4px 0;vertical-align:top">Nachricht</td><td>${message ? esc(message).replace(/\n/g, "<br>") : "–"}</td></tr>
+            </table>
+            <p style="margin:16px 0 0;color:#6b6b6b;font-size:13px">Angebot und Zahlungslink schickst du hier manuell.</p>`),
+        });
+      } catch (err) {
+        console.error("Benachrichtigung fehlgeschlagen", err);
+      }
+
+      return json({ sent: true, order });
+    }
 
     if (!PLANS[plan] || !billing) return json({ error: "Ungültiger Plan" }, 400);
-    if (!name || !EMAIL_RE.test(email)) return json({ error: "Name oder E-Mail fehlt" }, 400);
 
     const order = orderNumber();
     const { url, amount, code } = await createPaymentLink(plan, billing, order);
